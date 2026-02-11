@@ -1,7 +1,9 @@
 * Setup node server and database access
     - Install node in project
     - Add boilerplate to setup node app
+    - Create app.js and db.config
     - Load credentials for db from config file
+    - Setup server for testing
 * Add basic page access routes
     - Add a route for each page of the site
     - Include / for home/index.html
