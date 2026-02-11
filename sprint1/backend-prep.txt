@@ -1,0 +1,19 @@
+* Setup node server and database access
+    - Install node in project
+    - Add boilerplate to setup node app
+    - Load credentials for db from config file
+* Add basic page access routes
+    - Add a route for each page of the site
+    - Include / for home/index.html
+    - Include routes for login, registration
+    - Include routes to load new products page
+    - Will need html files for each route
+* Add user and product management routes
+    - Add routes to interact with the database
+    - This relies on having the database setup to be able to access
+    - Also need to have frontend partially finished for testing and knowing which features to implement and how.
+    - Add login route that checks if user exists and password matches
+    - Add registration route that adds a user if the username isn't already in the users table
+    - Add route to add products
+    - Add route to load new products
+    - Add route to load all products
