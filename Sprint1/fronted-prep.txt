@@ -1,0 +1,9 @@
+Build lading page layout 
+add navigation structure
+add styling basics 
+I would have to start creating the home page in node server using html or JavaScript. 
+I would use youTube videos or using the implementation of lab 1.
+I done for me is when everything sort of looks like the page the picture that i have from the wireframes. 
+What might stop me or block me would be not knowing a lot of html code or JavaScript but I am able to learn quickly from watching videos or using online resources. 
+I would need that they check my code or look over it to see if I need to change anything. 
+My plan is to work on this everyday by working on the feature day by day. 
