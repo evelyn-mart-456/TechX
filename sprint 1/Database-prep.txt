@@ -1,0 +1,12 @@
+I am responsible for:
+-Create tables for the database
+-Put dummy data into the tables
+-Write queries for the features
+
+setup steps
+
+
+Development plan:
+
+
+Risks/Questions:
