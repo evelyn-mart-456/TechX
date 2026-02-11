@@ -17,3 +17,7 @@
     - Add route to add products
     - Add route to load new products
     - Add route to load all products
+    - Add route to submit a rating to the db for each product
+    - Add route to submit a review to the db for each product
+    - Add route to create a poll for each product
+    - Add route to submit selected poll option
