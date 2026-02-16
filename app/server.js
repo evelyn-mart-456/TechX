@@ -3,6 +3,8 @@ const mysql = require('mysql2');
 const bodyParser = require('body-parser');
 const dbConfig = require('./dbConfig');
 
+const app = express();
+
 app.use(bodyParser.urlencoded({ extended: false}));
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -19,5 +21,3 @@ app.get('/register', (req, res) => {
 app.get('/new-tech', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'new-tech.html'));
 })
-
-app.post('/login')
