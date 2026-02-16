@@ -6,6 +6,7 @@ const path = require('path');
 const dbConfig = require('./dbConfig');
 
 const app = express();
+const port = 3000;
 
 app.use(bodyParser.urlencoded({ extended: false}));
 app.use(express.static(path.join(__dirname, 'public')));
@@ -22,4 +23,8 @@ app.get('/register', (req, res) => {
 
 app.get('/new-tech', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'new-tech.html'));
+})
+
+app.listen(port, () => {
+    console.log(`Express server running at http://localhost:${port}/`);
 })
