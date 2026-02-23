@@ -2,36 +2,59 @@
 <html>
 <head>
 <style>
+body{
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: linear-gradient(to right, #19d7f8, #fd00da);
+
+} 
 .topnav-right {
-  float: right;
+float: right;
 border: 2px solid  transparent; 
 border-radius: 20px;
-background-image: linear-gradient(#42455a, #42455a), radial-gradient(circle at top left, #fd00da, #19d7f8);
+background-image: linear-gradient(#AFDBF5, #AFDBF5), radial-gradient(circle at top left, #fd00da, #19d7f8);
 background-origin: border-box; 
 backgorund-clip; content-box, border-box;
-
 }
 .signup-bnt {
 top: 40px; 
 right: 80px; 
 position absolute; 
 text-decoration: none; 
-color: white; 
+color: Black; 
 border: 2px solid  transparent; 
 border-radius: 20px; 
-background-image: linear-gradient(#42455a, #42455a), radial-gradient(circle at top left, #fd00da, #19d7f8);
+background-image: linear-gradient(#AFDBF5, #AFDBF5), radial-gradient(circle at top left, #fd00da, #19d7f8);
 background-origin: border-box; 
 backgorund-clip; content-box, border-box;  
+}
+.container {
+ max-width: 900px;
+ margin: 80px auto;
+ padding: 20px; 
+text-align: center; 
+} 
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 40px;
 }
 </style>
 </head>
 <body>
+<div class = "navbar">
 <Img src= "Techx.png" width ="150" height ="100">  
 <div class="topnav-right">
-<a style = "padding-right: 20px; padding-left: 20px; padding: 10px 25px 10px 25px; color: white;" href  = "home.html">Home</a>
-<a style = "padding-right: 20px; padding: 10px 25px 10px 25px; color: white;" href = "about.html"> About </a>
-<a href ="#" class ="signup-bnt"> Sign Up</a> 
+<a style = "padding-right: 20px; padding-left: 20px; padding: 10px 25px 10px 25px; color: Black;" href  = "home.html">Home</a>
+<a style = "padding-right: 20px; padding: 10px 25px 10px 25px; color: Black;" href = "about.html"> About </a>
+<a class ="signup-bnt" href ="signup.html"> Sign Up</a>
 </div>
-<p>Our webpage helps serve the community with giving more information on new and improved tech. <br> This websites serves as a foundation on how tech can be improved and changed for good.</p>
+</div> 
+<div class = "container"> 
+<p>Our webpage helps serve the community with giving more information on new and improved tech.<br> This websites serves as a foundation on how tech can be improved and changed for good.</p>
+
+
+</div>
 </body>
 </html> 

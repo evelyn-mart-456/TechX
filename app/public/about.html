@@ -10,15 +10,77 @@ background-image: linear-gradient(#42455a, #42455a), radial-gradient(circle at t
 background-origin: border-box; 
 backgorund-clip; content-box, border-box;
 }
+
+body{
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: linear-gradient(to right, #19d7f8, #fd00da);
+
+} 
+
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 40px;
+}
+.poll-container {
+  background: white;
+  padding: 30px;
+  max-width: 500px;
+  margin: 50px auto;
+  border-radius: 15px;
+  box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+}
+
+.poll-container h2 {
+  text-align: center;
+}
+
+.poll-container button {
+  margin-top: 15px;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  background: #42455a;
+  color: white;
+  cursor: pointer;
+}
+
+.poll-container button:hover {
+  background: #2f3140;
+}
 </style>
 </head>
 <body>
+<div class = "navbar">
+
 <Img src= "Techx.png" width ="150" height ="100">
 <div class="topnav-right">
 <a style = "padding-right: 20px; padding-left: 20px; padding: 10px 25px 10px 25px; color: white;" href = "home.html">Home</a>
 <a style = "padding-right: 20px; padding: 10px 25px 10px 25px; color: white;" href = "about.html">About</a> 
-</div>  
-<div style="padding-right:16px">
+</div> 
+</div>
+<div class="poll-container">
+  <h2>Tech Poll of the Week</h2>
+
+  <form>
+    <p>Which tech innovation excites you the most?</p>
+
+    <label>
+      <input type="radio" name="tech"> Artificial Intelligence
+    </label><br>
+
+    <label>
+      <input type="radio" name="tech"> Virtual Reality
+    </label><br>
+
+    <label>
+      <input type="radio" name="tech"> Electric Vehicles
+    </label><br>
+
+    <button type="submit">Vote</button>
+  </form>
 </div>
 </body>
 </html>
