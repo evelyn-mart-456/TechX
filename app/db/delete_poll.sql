@@ -1,0 +1,2 @@
+DELETE FROM Poll
+WHERE PollID = ?;
