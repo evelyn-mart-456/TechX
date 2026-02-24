@@ -64,19 +64,19 @@ body{
 <div class="poll-container">
   <h2>Tech Poll of the Week</h2>
 
-  <form>
+  <form action="/submit-poll" method="post">
     <p>Which tech innovation excites you the most?</p>
 
     <label>
-      <input type="radio" name="tech"> Artificial Intelligence
+      <input type="radio" name="tech" value="Artificial Intelligence"> Artificial Intelligence
     </label><br>
 
     <label>
-      <input type="radio" name="tech"> Virtual Reality
+      <input type="radio" name="tech" value="Virtual Reality"> Virtual Reality
     </label><br>
 
     <label>
-      <input type="radio" name="tech"> Electric Vehicles
+      <input type="radio" name="tech" value="Electric Vehicles"> Electric Vehicles
     </label><br>
 
     <button type="submit">Vote</button>
