@@ -1,0 +1,29 @@
+
+problem Statement
+Users don't have the ability to voice their thoughts about products
+
+User Flow
+Probably the first step would be to create a mock up of the page-to give me an idea of what to do
+after that, I make the front end for fields to put the data in
+After that I make the tables for the backend to query.
+At the end, I need to make the back end 
+
+Technical Plan
+Frontend Changes: Another webpage, including a link to the webpage from the home page.
+Backend changes: Recieves requests from user for making a review. Error handling if user has rating outside of 1-5 range
+Database Changes: create new table, have queries for the backend to call
+
+API Changes
+-create a route from the frontend to the Database
+-get route to make sure the user has a rating within range
+-maybe something to ensure that only someone logged in can make a review/change or delete their review after posting
+-Expect to Create? Not sure
+
+Database changes: New Table: Review(Primary Key ReviewID, Varchar ProductName, Integer Rating, Varchar review);
+ If I have the review be by user, I would link the review to the UserID
+ not certain if I would have new fields in existing database.
+
+Acceptance Criteria
+-webpage must clearly state the product, what kind of product it is, the rating(out of 5 stars) chart, the box to write the review, and the publish button
+-there must be a working link from the home page to the review page
+-the review must be able to enter the database
