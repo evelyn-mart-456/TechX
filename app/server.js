@@ -16,10 +16,13 @@ const get_user_voted_sql = fs.readFileSync('./db/get_user_voted.sql', 'utf8');
 
 const create_staff_sql = fs.readFileSync('./db/create_staff.sql', 'utf8');
 const get_staff_sql = fs.readFileSync('./db/get_staff.sql', 'utf8');
+const get_all_staff_sql = fs.readFileSync('./db/get_all_staff.sql', 'utf8');
+const activate_staff_sql = fs.readFileSync('./db/activate_staff.sql', 'utf8');
 
 const app = express();
 const port = 3000;
 
+app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: false}));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(session({
@@ -74,10 +77,40 @@ app.get('/staff', (req, res) => {
     if(req.session.staffId) {
         res.sendFile(path.join(__dirname, 'public', 'staff.html'));
     } else {
-        console.log(req);
-        res.redirect('/staff-login')
+        res.redirect('/staff-login');
     }
 });
+
+app.get('/staff-session', (req, res) => {
+    if(req.session.staffId && req.session.staffUsername) {
+        res.json({staffId: req.session.staffId, staffUsername: req.session.staffUsername });
+    } else {
+        res.json({error: "You are not logged in."});
+    }
+});
+
+app.get('/product-management', (req, res) => {
+    if(req.session.staffId) {
+        res.sendFile(path.join(__dirname, 'public', 'product-management.html'));
+    } else {
+        res.redirect('/staff-login');
+    }
+});
+
+app.get('/get-staff', (req, res) => {
+    if(req.session.staffId) {
+        db.query(get_all_staff_sql, [], (err, results) => {
+            if(err) {
+                console.error(err);
+                return res.status(500).send('Server error');
+            }
+
+            res.json({results: results});
+        });
+    } else {
+        res.json({error: "You do not have permission to view this."});
+    }
+})
 
 app.post('/register', (req, res) => {
     const username = req.body.username;
@@ -216,7 +249,7 @@ app.post('/staff-login', (req, res) => {
                 if(results[0].Activated) {
                     req.session.staffId = results[0].StaffID;
                     req.session.staffUsername = results[0].Username;
-                    res.json( {success: true} );
+                    res.redirect('/staff');
                 }
                 else
                     res.json( {error: "Your staff acount has not been activated."});
@@ -229,6 +262,12 @@ app.post('/staff-login', (req, res) => {
     });
 });
 
+app.get('/staff-logout', (req, res) => {
+    delete req.session.staffId;
+    delete req.session.staffUsername;
+    
+    res.redirect('/staff-login');
+});
 
 app.post('/staff-register', (req, res) => {
     const username = req.body.username;
@@ -255,6 +294,24 @@ app.post('/staff-register', (req, res) => {
             });
         }
     });
+});
+
+app.post('/staff-activate', (req, res) => {
+    if(req.session.staffId) {
+        if(req.body.staffId != req.session.staffId) {
+            db.query(activate_staff_sql, [req.body.staffId], (err, results) => {
+                if(err) {
+                    console.error('Database error:', err);
+                }
+                
+                if(results.affectedRows === 0)
+                    return res.json({success: false});
+                else
+                    return res.json({success: true});
+            });
+        } else
+            return res.json({success: true});
+    }
 });
 
 app.listen(port, () => {

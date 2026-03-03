@@ -2,9 +2,105 @@
 <html lang="">
   <head>
     <meta charset="utf-8">
-    <title></title>
+    <title>Staff</title>
+    
+    <style>
+    table{
+      border-collapse: collapse;
+    }
+    td, th {
+      border: 1px solid;
+      text-align: left;
+    }
+    </style>
   </head>
   <body>
-    Staff Page
+    <header><a href="/staff">Staff</a> <a href="/product-management">Product Management</a> <a href="/staff-logout">Logout</a></header>
+    <main>
+      <table>
+        <thead>
+          <tr>
+            <th>Username</th>
+            <th>Email</th>
+            <th>Activation Status</th>
+          </tr>
+        </thead>
+        <tbody id="staff">
+        </tbody>
+      </table>
+    </main>
+    
+    <script>
+    const staffTable = document.getElementById("staff");
+    
+    async function getStaff() {
+      staffTable.innerHTML = "";
+      
+      const sessionRes = await fetch('/staff-session');
+      const sessionData = await sessionRes.json();
+      
+      if(sessionData.error) {
+        console.log(sessionData.error);
+        return;
+      }
+      
+      const staffId = Number(sessionData.staffId);
+      const staffUser = sessionData.staffUsername;
+    
+      const res = await fetch('/get-staff');
+      const data = await res.json();
+      
+      data.results.forEach( user => {
+        let row = document.createElement("tr");
+        let userTd = document.createElement("td");
+        userTd.innerHTML = user.Username;
+        
+        let emailTd = document.createElement("td");
+        emailTd.innerHTML = user.Email;
+        
+        let activeTd = document.createElement("td");
+        let activeCheck = document.createElement("input");
+        
+        activeCheck.type = "checkbox";
+        activeCheck.checked = user.Activated;
+        activeCheck.setAttribute("data-staff-id", Number(user.StaffID));
+        
+        if(Number(user.StaffID) === Number(staffId))
+          activeCheck.disabled = true;
+        
+        activeTd.append(activeCheck);
+        
+        row.appendChild(userTd);
+        row.appendChild(emailTd);
+        row.appendChild(activeTd);
+        
+        staffTable.appendChild(row);
+      });
+    }
+    
+    getStaff();
+    
+    staffTable.addEventListener("change", async (event) => {
+      if(event.target.matches('input')) {
+        const staffId = event.target.closest("input").dataset.staffId;
+        
+        const res = await fetch('/staff-activate', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ staffId: staffId })
+        });
+
+        const data = await res.json();
+        
+        if(!data.success)
+          console.log("Error updating activation.");
+        
+        getStaff();
+      }
+    });
+      
+    </script>
   </body>
 </html>

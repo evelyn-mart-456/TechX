@@ -1,1 +1,1 @@
-UPDATE Staff SET Activated = true WHERE StaffID = ?;
+UPDATE Staff SET Activated = NOT Activated WHERE StaffID = ?;
