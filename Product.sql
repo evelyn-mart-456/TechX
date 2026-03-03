@@ -1,0 +1,1 @@
+CREATE TABLE `TechX`.`Product` ( `ProductID` INT NOT NULL AUTO_INCREMENT , `ProductName` VARCHAR(1000) NOT NULL , `ProductDesc` VARCHAR(10000) NOT NULL , `ProductImage` VARCHAR(300) NOT NULL , `Featured` BOOLEAN NOT NULL , `ProductLink` VARCHAR(5000) NOT NULL , PRIMARY KEY (`ProductID`));

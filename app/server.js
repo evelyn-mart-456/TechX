@@ -14,6 +14,9 @@ const create_vote_sql = fs.readFileSync('./db/create_vote.sql', 'utf8');
 const get_votes_sql = fs.readFileSync('./db/get_votes.sql', 'utf8');
 const get_user_voted_sql = fs.readFileSync('./db/get_user_voted.sql', 'utf8');
 
+const create_staff_sql = fs.readFileSync('./db/create_staff.sql', 'utf8');
+const get_staff_sql = fs.readFileSync('./db/get_staff.sql', 'utf8');
+
 const app = express();
 const port = 3000;
 
@@ -26,7 +29,14 @@ app.use(session({
     cookie: { secure: false }
 }));
 
-const db = mysql.createConnection(dbConfig);
+const db = mysql.createPool({
+    ...dbConfig,
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0,
+    enableKeepAlive: true,
+    keepAliveInitialDelay: 0,
+});
 
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'home.html'));
@@ -50,6 +60,23 @@ app.get('/register', (req, res) => {
 
 app.get('/new-tech', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'new-tech.html'));
+});
+
+app.get('/staff-login', (req, res) => {
+   res.sendFile(path.join(__dirname, 'public', 'staff-login.html'));
+});
+
+app.get('/staff-register', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'staff-register.html'));
+});
+
+app.get('/staff', (req, res) => {
+    if(req.session.staffId) {
+        res.sendFile(path.join(__dirname, 'public', 'staff.html'));
+    } else {
+        console.log(req);
+        res.redirect('/staff-login')
+    }
 });
 
 app.post('/register', (req, res) => {
@@ -172,6 +199,62 @@ app.post('/votepoll', (req, res) => {
     } else {
         res.json( {error: "You must be logged in to vote."} );
     }
+});
+
+app.post('/staff-login', (req, res) => {
+    const username = req.body.username;
+    const hashedPassword = crypto.createHash('sha256').update(req.body.password).digest('hex');
+
+    db.query(get_staff_sql, [username, hashedPassword], (err, results) => {
+        if(err) {
+            console.error(err);
+            return res.status(500).send('Server error');
+        }
+
+        if(results.length > 0) {
+            if(results[0].Password_Hash === hashedPassword && results[0].Username === username) {
+                if(results[0].Activated) {
+                    req.session.staffId = results[0].StaffID;
+                    req.session.staffUsername = results[0].Username;
+                    res.json( {success: true} );
+                }
+                else
+                    res.json( {error: "Your staff acount has not been activated."});
+            }
+            else
+                res.json( {error: 'Invalid password.'} );
+        } else {
+            res.json( {error: 'Invalid username.'} );
+        }
+    });
+});
+
+
+app.post('/staff-register', (req, res) => {
+    const username = req.body.username;
+    const hashedPassword = crypto.createHash('sha256').update(req.body.password).digest('hex');
+    const email = req.body.email;
+
+    db.query(get_staff_sql, [username], (err, results) => {
+        if(err) {
+            console.error('Database error:', err);
+        }
+
+        if(results.length > 0) {
+            res.json({error: "Error: username is taken."});
+        } else {
+            db.query(create_staff_sql, [email, username, hashedPassword], (err, results) => {
+                if(err) {
+                    console.error('Database error:', err);
+                    return res.status(500).send('Server error');
+                }
+                if(results.affectedRows === 0)
+                    return res.json({error: 'Username already taken'});
+
+                res.json({success: true});
+            });
+        }
+    });
 });
 
 app.listen(port, () => {
