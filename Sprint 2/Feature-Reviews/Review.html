@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: linear-gradient(to right, #19d7f8, #fd00da);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+.review-container {
+  background: white;
+  padding: 40px;
+  width: 350px;
+  border-radius: 15px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+  text-align: center;
+}
+h2 {
+  margin-bottom: 20px;
+}
+
+input {
+  width: 100%;
+  padding: 12px;
+  margin: 10px 0;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+}
+
+button {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  background: #42455a;
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+button:hover {
+  background: #2f3140;
+}
+</style>
+</head>
+<body>
+    <div class="review-container">
+        <h2>Create Your Review</h2>
+        <Form id = "reviewForm"> action = "submit_review.php" method = "post">
+        <input type="text" placeholder="Product Name">
+        <input type="number" placeholder="Rating (1-5)" min="1" max="5">
+        <textarea placeholder="Your Review" rows="4" style="width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #ccc;"></textarea>
+        <button type = "submit">Submit Review</button>
+        </div>
+        <p id = "confirmation" style="margin-top: 20px; color: green;"></p>
+    </Form>
+
+</body>
+
+</html>
