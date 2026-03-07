@@ -19,6 +19,13 @@ const get_staff_sql = fs.readFileSync('./db/get_staff.sql', 'utf8');
 const get_all_staff_sql = fs.readFileSync('./db/get_all_staff.sql', 'utf8');
 const activate_staff_sql = fs.readFileSync('./db/activate_staff.sql', 'utf8');
 
+const create_product_sql = fs.readFileSync('./db/create_product.sql', 'utf8');
+const update_product_sql = fs.readFileSync('./db/update_product.sql', 'utf8');
+const delete_product_sql = fs.readFileSync('./db/delete_product.sql', 'utf8');
+const get_product_sql = fs.readFileSync('./db/get_product.sql', 'utf8');
+const get_products_sql = fs.readFileSync('./db/get_products.sql', 'utf8');
+const get_featured_products_sql = fs.readFileSync('./db/get_featured_products.sql', 'utf8');
+
 const app = express();
 const port = 3000;
 
@@ -61,8 +68,8 @@ app.get('/register', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'register.html'));
 });
 
-app.get('/new-tech', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'new-tech.html'));
+app.get('/featured-tech', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'featured-tech.html'));
 });
 
 app.get('/staff-login', (req, res) => {
@@ -111,6 +118,21 @@ app.get('/get-staff', (req, res) => {
         res.json({error: "You do not have permission to view this."});
     }
 })
+
+app.get('/get-products', (req, res) => {
+    if(req.session.staffId) {
+        db.query(get_products_sql, [], (err, results) => {
+            if(err) {
+                console.error(err);
+                return res.status(500).send('Server error');
+            }
+
+            res.json({results: results});
+        });
+    } else {
+        res.json({error: "You do not have permission to view this."});
+    }
+});
 
 app.post('/register', (req, res) => {
     const username = req.body.username;

@@ -3,10 +3,85 @@
   <head>
     <meta charset="utf-8">
     <title></title>
+
+    <style>
+    table{
+      border-collapse: collapse;
+    }
+    td, th {
+      border: 1px solid;
+      text-align: left;
+      padding: 8px;
+    }
+    </style>
   </head>
   <body>
-    <header></header>
-    <main></main>
-    <footer></footer>
+    <header><a href="/staff">Staff</a> <a href="/product-management">Product Management</a> <a href="/staff-logout">Logout</a></header>
+    <main>
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Image</th>
+            <th>Featured</th>
+            <th>Link</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="productBody">
+
+        </tbody>
+      </table>
+    </main>
   </body>
+  <script>
+    function createRow(product) {
+      const row = document.createElement("tr");
+      row.dataset.id = product.ProductID;
+
+      row.innerHTML = `
+        <td><input name="name" type="text" placeholder="Product Name" value="${product.ProductName}"\></td>
+        <td><input name="desc" type="text" placeholder="Product Description" value="${product.ProductDesc}"\></td>
+        <td><img src="product-images/${product.ProductImage}" height="80px" /><input name="image" type="file" accept="image/*" \></td>
+        <td><input name="featured" type="checkbox" ${product.Featured ? "checked" : ""} \></td>
+        <td><input name="link" type="text" placeholder="Product Link" value="${product.ProductLink}"\></td>
+        <td><input name="save" value="Update" type="submit" /><input name="delete" value="Delete" type="submit" /></td>
+      `;
+
+      return row;
+    }
+
+    function saveRow(row) {
+
+    }
+
+    async function getProducts() {
+      const res = await fetch('/get-products');
+      const data = await res.json();
+
+      const tbody = document.getElementById("productBody");
+      tbody.innerHTML = "";
+
+      data.results.forEach(product => {
+        const row = createRow(product);
+
+        tbody.appendChild(row);
+      });
+
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td><input name="name" type="text" placeholder="Product Name" \></td>
+        <td><input name="desc" type="text" placeholder="Product Description" \></td>
+        <td><img src="" height="80px" /><input name="image" type="file" accept="image/*" \></td>
+        <td><input name="featured" type="checkbox" \></td>
+        <td><input name="link" type="text" placeholder="Product Link" \></td>
+        <td><input name="save" value="Save" type="submit" /></td>
+      `;
+
+      tbody.appendChild(row);
+    }
+
+    getProducts();
+  </script>
 </html>
