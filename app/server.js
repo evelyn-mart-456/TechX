@@ -6,6 +6,7 @@ const path = require('path');
 const dbConfig = require('./dbConfig');
 const fs = require('fs');
 const session = require('express-session');
+const multer = require('multer');
 
 // Loading sql files here
 const register_sql = fs.readFileSync('./db/create_user.sql', 'utf8');
@@ -21,6 +22,7 @@ const activate_staff_sql = fs.readFileSync('./db/activate_staff.sql', 'utf8');
 
 const create_product_sql = fs.readFileSync('./db/create_product.sql', 'utf8');
 const update_product_sql = fs.readFileSync('./db/update_product.sql', 'utf8');
+const update_product_noimg_sql = fs.readFileSync('./db/update_product_noimg.sql', 'utf8');
 const delete_product_sql = fs.readFileSync('./db/delete_product.sql', 'utf8');
 const get_product_sql = fs.readFileSync('./db/get_product.sql', 'utf8');
 const get_products_sql = fs.readFileSync('./db/get_products.sql', 'utf8');
@@ -28,6 +30,15 @@ const get_featured_products_sql = fs.readFileSync('./db/get_featured_products.sq
 
 const app = express();
 const port = 3000;
+
+const productStorage = multer.diskStorage({
+  destination: "public/product-images/",
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + "-" + file.originalname);
+  }
+});
+
+const uploadProductImg = multer({ storage: productStorage });
 
 app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: false}));
@@ -88,6 +99,14 @@ app.get('/staff', (req, res) => {
     }
 });
 
+function requireStaff(req, res, next) {
+  if (!req.session.staffId) {
+    return res.sendStatus(403);
+  }
+
+  next();
+}
+
 app.get('/staff-session', (req, res) => {
     if(req.session.staffId && req.session.staffUsername) {
         res.json({staffId: req.session.staffId, staffUsername: req.session.staffUsername });
@@ -104,7 +123,7 @@ app.get('/product-management', (req, res) => {
     }
 });
 
-app.get('/get-staff', (req, res) => {
+app.get('/get-staff', requireStaff, (req, res) => {
     if(req.session.staffId) {
         db.query(get_all_staff_sql, [], (err, results) => {
             if(err) {
@@ -119,7 +138,7 @@ app.get('/get-staff', (req, res) => {
     }
 })
 
-app.get('/get-products', (req, res) => {
+app.get('/get-products', requireStaff, (req, res) => {
     if(req.session.staffId) {
         db.query(get_products_sql, [], (err, results) => {
             if(err) {
@@ -131,6 +150,76 @@ app.get('/get-products', (req, res) => {
         });
     } else {
         res.json({error: "You do not have permission to view this."});
+    }
+});
+
+app.post('/products', requireStaff, uploadProductImg.single("image"), (req, res) => {
+    const file = req.file;
+    const filename = req.file.filename;
+
+    const name = req.body.name;
+    const desc = req.body.desc;
+    const link = req.body.link;
+    const featured = req.body.featured === "true";
+
+    db.query(create_product_sql, [name, desc, filename, featured, link], (err, results) => {
+        if(err) {
+            console.error(err);
+            return res.status(500).send('Server error');
+        }
+
+        res.json({success: "true"});
+    });
+    
+});
+
+app.patch('/products/:id', requireStaff, uploadProductImg.single("image"), (req, res) => {
+    const file = req.file;
+
+    const name = req.body.name;
+    const desc = req.body.desc;
+    const link = req.body.link;
+    const featured = req.body.featured === "true";
+
+    const id = req.params.id;
+
+    if(file) {
+        const filename = req.file.filename;
+        db.query(update_product_sql, [name, desc, filename, featured, link, id], (err, results) => {
+            if(err) {
+                console.error(err);
+                return res.status(500).send('Server error');
+            }
+
+            res.json({success: "true"});
+        });
+    } else {
+        db.query(update_product_noimg_sql, [name, desc, featured, link, id], (err, results) => {
+            if(err) {
+                console.error(err);
+                return res.status(500).send('Server error');
+            }
+
+            res.json({success: "true"});
+        });
+    }
+
+});
+
+app.delete('/products/:id', requireStaff, (req, res) => {
+    if(req.session.staffId) {
+        const id = req.params.id;
+
+        db.query(delete_product_sql, [id], (err, results) => {
+            if(err) {
+                console.error(err);
+                return res.status(500).send('Server error');
+            }
+
+            res.json({success: "true"});
+        });
+    } else {
+        res.json({error: "You do not have permission to do this."});
     }
 });
 
@@ -318,7 +407,7 @@ app.post('/staff-register', (req, res) => {
     });
 });
 
-app.post('/staff-activate', (req, res) => {
+app.post('/staff-activate', requireStaff, (req, res) => {
     if(req.session.staffId) {
         if(req.body.staffId != req.session.staffId) {
             db.query(activate_staff_sql, [req.body.staffId], (err, results) => {

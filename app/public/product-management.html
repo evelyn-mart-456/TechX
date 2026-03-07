@@ -36,47 +36,119 @@
     </main>
   </body>
   <script>
-    function createRow(product) {
+    function loadRow(product) {
       const row = document.createElement("tr");
       row.dataset.id = product.ProductID;
 
       row.innerHTML = `
-        <td><input name="name" type="text" placeholder="Product Name" value="${product.ProductName}"\></td>
-        <td><input name="desc" type="text" placeholder="Product Description" value="${product.ProductDesc}"\></td>
+        <td><input name="name" type="text" placeholder="Product Name" value="${product.ProductName}" required \></td>
+        <td><input name="desc" type="text" placeholder="Product Description" value="${product.ProductDesc}" required \></td>
         <td><img src="product-images/${product.ProductImage}" height="80px" /><input name="image" type="file" accept="image/*" \></td>
         <td><input name="featured" type="checkbox" ${product.Featured ? "checked" : ""} \></td>
-        <td><input name="link" type="text" placeholder="Product Link" value="${product.ProductLink}"\></td>
+        <td><input name="link" type="text" placeholder="Product Link" value="${product.ProductLink}" required \></td>
         <td><input name="save" value="Update" type="submit" /><input name="delete" value="Delete" type="submit" /></td>
       `;
 
       return row;
     }
 
-    function saveRow(row) {
+    async function createRow(row) {
+      const formData = new FormData();
 
+      const name = row.querySelector('[name="name"]').value;
+      const desc = row.querySelector('[name="desc"]').value;
+      const image = row.querySelector('[name="image"]').files[0];
+      const checked = row.querySelector('[name="featured"]').checked;
+      const link = row.querySelector('[name="link"]').value;
+
+      if(!name.trim() || !desc.trim() || !link.trim() || !image)
+        return;
+
+      formData.append("name", name);
+      formData.append("desc", desc);
+      formData.append("image", image);
+      formData.append("featured", checked);
+      formData.append("link", link);
+
+      await fetch(`/products`, {
+        method: "POST",
+        body: formData
+      });
     }
+
+    async function deleteRow(row) {
+      await fetch(`/products/${row.dataset.id}`, {
+        method: "DELETE"
+      });
+    }
+
+    async function saveRow(row) {
+      const formData = new FormData();
+
+      const name = row.querySelector('[name="name"]').value;
+      const desc = row.querySelector('[name="desc"]').value;
+      const image = row.querySelector('[name="image"]').files[0];
+      const checked = row.querySelector('[name="featured"]').checked;
+      const link = row.querySelector('[name="link"]').value;
+
+      formData.append("name", name);
+      formData.append("desc", desc);
+      if(image)
+        formData.append("image", image);
+      formData.append("featured", checked);
+      formData.append("link", link);
+
+      await fetch(`/products/${row.dataset.id}`, {
+        method: "PATCH",
+        body: formData
+      });
+    }
+
+    const tbody = document.getElementById("productBody");
+
+    tbody.addEventListener("click", async (event) => {
+        const button = event.target;
+
+        if(button.name === "save") {
+          const row = button.closest("tr");
+          await saveRow(row);
+          await getProducts();
+        }
+
+        if(button.name === "create") {
+          const row = button.closest("tr");
+          await createRow(row);
+          await getProducts();
+        }
+
+        if(button.name === "delete") {
+          const row = button.closest("tr");
+          await deleteRow(row);
+          await getProducts();
+        }
+
+      });
 
     async function getProducts() {
       const res = await fetch('/get-products');
       const data = await res.json();
 
-      const tbody = document.getElementById("productBody");
       tbody.innerHTML = "";
 
       data.results.forEach(product => {
-        const row = createRow(product);
+        const row = loadRow(product);
 
         tbody.appendChild(row);
       });
 
       const row = document.createElement("tr");
       row.innerHTML = `
-        <td><input name="name" type="text" placeholder="Product Name" \></td>
-        <td><input name="desc" type="text" placeholder="Product Description" \></td>
+        <td><input name="name" type="text" placeholder="Product Name" required \></td>
+        <td><input name="desc" type="text" placeholder="Product Description" required \></td>
         <td><img src="" height="80px" /><input name="image" type="file" accept="image/*" \></td>
         <td><input name="featured" type="checkbox" \></td>
-        <td><input name="link" type="text" placeholder="Product Link" \></td>
-        <td><input name="save" value="Save" type="submit" /></td>
+        <td><input name="link" type="text" placeholder="Product Link" required \></td>
+        <td><input name="create" value="Save" type="submit" /></td>
       `;
 
       tbody.appendChild(row);
