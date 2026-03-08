@@ -53,12 +53,28 @@ button:hover {
         <Form id = "reviewForm"> action = "submit_review.php" method = "post">
         <input type="text" placeholder="Product Name">
         <input type="number" placeholder="Rating (1-5)" min="1" max="5">
-        <textarea placeholder="Your Review" rows="4" style="width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #ccc;"></textarea>
         <button type = "submit">Submit Review</button>
         </div>
-        <p id = "confirmation" style="margin-top: 20px; color: green;"></p>
     </Form>
 
 </body>
 
+<script>
+    const reviewForm = document.getElementById('reviewForm');
+reviewForm.addEventListener('submit', function(event) {
+    event.preventDefault();
+    alert('Review submitted successfully!');
+});
+const res = await fetch('submit_review.php', {
+    method: 'POST',
+    body: new FormData(reviewForm)
+});
+
+const data = await res.json();
+if (data.success) {
+    alert('Review submitted successfully!');
+} else {
+    alert('Failed to submit review. Please try again.');
+}
+</script>
 </html>
