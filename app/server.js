@@ -79,8 +79,8 @@ app.get('/register', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'register.html'));
 });
 
-app.get('/featured-tech', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'featured-tech.html'));
+app.get('/tech', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'tech.html'));
 });
 
 app.get('/staff-login', (req, res) => {
@@ -138,19 +138,26 @@ app.get('/get-staff', requireStaff, (req, res) => {
     }
 })
 
-app.get('/get-products', requireStaff, (req, res) => {
-    if(req.session.staffId) {
-        db.query(get_products_sql, [], (err, results) => {
-            if(err) {
-                console.error(err);
-                return res.status(500).send('Server error');
-            }
+app.get('/get-products', (req, res) => {
+    db.query(get_products_sql, [], (err, results) => {
+        if(err) {
+            console.error(err);
+            return res.status(500).send('Server error');
+        }
 
-            res.json({results: results});
-        });
-    } else {
-        res.json({error: "You do not have permission to view this."});
-    }
+        res.json({results: results});
+    });
+});
+
+app.get('/featured-products', (req, res) => {
+    db.query(get_featured_products_sql, [], (err, results) => {
+        if(err) {
+            console.error(err);
+            return res.status(500).send('Server error');
+        }
+
+        res.json({results: results});
+    });
 });
 
 app.post('/products', requireStaff, uploadProductImg.single("image"), (req, res) => {
