@@ -27,6 +27,10 @@ const delete_product_sql = fs.readFileSync('./db/delete_product.sql', 'utf8');
 const get_product_sql = fs.readFileSync('./db/get_product.sql', 'utf8');
 const get_products_sql = fs.readFileSync('./db/get_products.sql', 'utf8');
 const get_featured_products_sql = fs.readFileSync('./db/get_featured_products.sql', 'utf8');
+const get_categories_sql = fs.readFileSync('./db/get_product_categories.sql', 'utf8');
+const create_product_category_sql = fs.readFileSync('./db/create_product_category.sql', 'utf8');
+const update_product_category_sql = fs.readFileSync('./db/update_product_category.sql', "utf8");
+const delete_product_category_sql = fs.readFileSync('./db/delete_product_category.sql', 'utf8');
 
 const app = express();
 const port = 3000;
@@ -139,13 +143,20 @@ app.get('/get-staff', requireStaff, (req, res) => {
 })
 
 app.get('/get-products', (req, res) => {
-    db.query(get_products_sql, [], (err, results) => {
+    db.query(get_products_sql, [], (err, products) => {
         if(err) {
             console.error(err);
             return res.status(500).send('Server error');
         }
 
-        res.json({results: results});
+        db.query(get_categories_sql, [], (err, categories) => {
+            if(err) {
+                console.error(err);
+                return res.status(500).send('Server error');
+            }
+
+            res.json({products: products, categories: categories});
+        })
     });
 });
 
@@ -160,6 +171,46 @@ app.get('/featured-products', (req, res) => {
     });
 });
 
+app.post('/categories', requireStaff, (req, res) => {
+    const name = req.body.name;
+
+    db.query(create_product_category_sql, [name], (err, results) => {
+        if(err) {
+            console.error(err);
+            return res.status(500).send('Server error');
+        }
+
+        res.json({success: "true"});
+    });
+});
+
+app.patch('/categories/:id', requireStaff, (req, res) => {
+    const name = req.body.name;
+    const id = req.params.id;
+
+    db.query(update_product_category_sql, [name, id], (err, results) =>{
+        if(err) {
+            console.error(err);
+            return res.status(500).send('Server error');
+        }
+
+        res.json({success: "true"});
+    });
+});
+
+app.delete('/categories/:id', requireStaff, (req, res) => {
+    const id = req.params.id;
+
+    db.query(delete_product_category_sql, [id], (err, results) =>{
+        if(err) {
+            console.error(err);
+            return res.status(500).send('Server error');
+        }
+
+        res.json({success: "true"});
+    });
+});
+
 app.post('/products', requireStaff, uploadProductImg.single("image"), (req, res) => {
     const file = req.file;
     const filename = req.file.filename;
@@ -167,9 +218,12 @@ app.post('/products', requireStaff, uploadProductImg.single("image"), (req, res)
     const name = req.body.name;
     const desc = req.body.desc;
     const link = req.body.link;
+    const catID = req.body.catID;
+    const price = req.body.price;
+
     const featured = req.body.featured === "true";
 
-    db.query(create_product_sql, [name, desc, filename, featured, link], (err, results) => {
+    db.query(create_product_sql, [name, desc, filename, featured, link, catID, price], (err, results) => {
         if(err) {
             console.error(err);
             return res.status(500).send('Server error');
@@ -186,13 +240,16 @@ app.patch('/products/:id', requireStaff, uploadProductImg.single("image"), (req,
     const name = req.body.name;
     const desc = req.body.desc;
     const link = req.body.link;
+    const catID = req.body.catID;
+    const price = req.body.price;
+
     const featured = req.body.featured === "true";
 
     const id = req.params.id;
 
     if(file) {
         const filename = req.file.filename;
-        db.query(update_product_sql, [name, desc, filename, featured, link, id], (err, results) => {
+        db.query(update_product_sql, [name, desc, filename, featured, link, catID, price, id], (err, results) => {
             if(err) {
                 console.error(err);
                 return res.status(500).send('Server error');
@@ -201,7 +258,7 @@ app.patch('/products/:id', requireStaff, uploadProductImg.single("image"), (req,
             res.json({success: "true"});
         });
     } else {
-        db.query(update_product_noimg_sql, [name, desc, featured, link, id], (err, results) => {
+        db.query(update_product_noimg_sql, [name, desc, featured, link, catID, price, id], (err, results) => {
             if(err) {
                 console.error(err);
                 return res.status(500).send('Server error');

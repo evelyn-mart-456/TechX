@@ -1,2 +1,2 @@
-INSERT INTO Product (ProductName, ProductDesc, ProductImage, Featured, ProductLink) 
-VALUES (?, ?, ?, ?, ?);
+INSERT INTO Product (ProductName, ProductDesc, ProductImage, Featured, ProductLink, CategoryID, RetailPrice) 
+VALUES (?, ?, ?, ?, ?, ?, ?);

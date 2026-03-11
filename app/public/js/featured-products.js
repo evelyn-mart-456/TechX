@@ -36,7 +36,7 @@ async function buildCarousel() {
     const container = document.getElementById("featured-tech");
 
     container.innerHTML = `
-        <div id="featured-carousel" class="carousel slide bg-dark" data-bs-interval="5000">
+        <div id="featured-carousel" class="carousel slide bg-dark" data-bs-interval="5000" data-bs-ride="carousel">
             <div class="carousel-inner" id="carousel-inner">
             </div>
             <button class="carousel-control-prev" type="button" data-bs-target="#featured-carousel" data-bs-slide="prev">
