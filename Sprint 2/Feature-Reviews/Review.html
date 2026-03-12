@@ -50,32 +50,54 @@ button:hover {
 <body>
     <div class="review-container">
         <h2>Create Your Review</h2>
-        <Form id = "reviewForm"> Create your review here
-        <input type="text" placeholder="Product Name">
-        <input type="number" placeholder="Rating (1-5)" min="1" max="5">
-        <input type="text" placeholder="Your Review">
+        <form id = "reviewForm"> Create your review here
+        <input name="product_name" type="text" placeholder="Product Name" required>
+        <input name="review_text" type="text" placeholder="Your Review">
+        <input name="rating" type="number" placeholder="Rating (1-5)" min="1" max="5" required>
         <button type = "submit">Submit Review</button>
         </div>
-    </Form>
+    </form>
 
 </body>
 
 <script>
     const reviewForm = document.getElementById('reviewForm');
-reviewForm.addEventListener('submit', function(event) {
+reviewForm.addEventListener('submit', async function(event) {
     event.preventDefault();
-    alert('Review submitted successfully!');
-});
+
+    const formData = new FormData(reviewForm);
+    const payload = {
+        product_name: formData.get('product_name'),
+        review_text: formData.get('review_text'),
+        rating: formData.get('rating')
+    };
+    if(!payload.product_name || !payload.rating || payload.rating < 1 || payload.rating > 5) {
+        alert('Please fill in all required fields.');
+        return;
+    }
+    
+    console.log('Submitting review:', payload);
+
 const res = await fetch('submit_review.php', {
     method: 'POST',
-    body: new FormData(reviewForm)
+    headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(payload)
 });
+console.log('Server response:', res.status);
 
-const data = await res.json();
+const data = await res.json().catch(err => {
+    console.error('Error parsing JSON:', err);
+    alert('An error occurred while submitting your review. Please try again.');
+    return;
+});
 if (data.success) {
     alert('Review submitted successfully!');
 } else {
     alert('Failed to submit review. Please try again.');
 }
+});
 </script>
 </html>
