@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Mar 04, 2026 at 01:55 AM
+-- Generation Time: Mar 13, 2026 at 03:45 PM
 -- Server version: 8.0.45-0ubuntu0.22.04.1
 -- PHP Version: 8.1.2-1ubuntu2.23
 
@@ -147,8 +147,46 @@ CREATE TABLE `Product` (
   `ProductDesc` varchar(10000) NOT NULL,
   `ProductImage` varchar(300) NOT NULL,
   `Featured` tinyint(1) NOT NULL,
-  `ProductLink` varchar(5000) NOT NULL
+  `ProductLink` varchar(5000) NOT NULL,
+  `RetailPrice` decimal(10,2) DEFAULT NULL,
+  `CategoryID` int DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `Product`
+--
+
+INSERT INTO `Product` (`ProductID`, `ProductName`, `ProductDesc`, `ProductImage`, `Featured`, `ProductLink`, `RetailPrice`, `CategoryID`) VALUES
+(10, 'Steam Machine', 'Powerful PC gaming made easy, in a small and mighty package. With over six times the horsepower of Steam Deck, Steam Machine has the power to play your whole Steam library, including your favorite AAA titles. Just sign in with your Steam account and your entire library is there.', '1773101048264-steam_machine.jpeg', 1, 'https://store.steampowered.com/sale/steammachine', '800.00', 8),
+(11, 'Meta AI Glasses', ' AI glasses for effortless connection  Discover innovations in eyewear, changing how you see and connect with the world around you. AI glasses Starting at $299 AI glasses blend form and function, helping you stay connected and present—in style ', '1773101692080-meta-ai.webp', 1, 'https://www.meta.com/ai-glasses/', '799.00', 2),
+(12, 'Apple Vision Pro', 'Apple’s spatial computing headset blending AR and VR with ultra-high resolution displays and eye tracking.', '1773103297348-vision-pro.webp', 0, 'https://www.apple.com/apple-vision-pro/', '3500.00', 7),
+(13, 'Rabbit R1', 'Pocket AI assistant device designed to perform tasks like booking rides, ordering food, and answering questions.', '1773103383834-rabbit-r1.jpg', 0, 'https://rabbit.tech/', '0.01', 2),
+(14, 'Framework Laptop 16', 'Fully modular laptop designed for repairability, upgrades, and swappable GPU modules.', '1773103444888-framework-laptop.avif', 1, 'https://frame.work/laptop-16', '2000.00', 1),
+(15, 'DJI Neo Drone', 'Ultra-light autonomous drone designed for quick aerial photography and easy travel.', '1773103556836-neo-drone.jpg', 1, 'https://www.dji.com/neo', '599.00', 6),
+(18, 'Valve Index', 'Super Cool VR headset made by Valve a few years ago, a bit outdated now.', '1773243472203-road-to-vr-valve-index-is-the-best-overall-hmd-available-v0-z2j9l7jio8fa1.webp', 0, 'https://store.steampowered.com/valveindex', '999.00', 7);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `ProductCategory`
+--
+
+CREATE TABLE `ProductCategory` (
+  `CategoryID` int NOT NULL,
+  `Name` varchar(300) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `ProductCategory`
+--
+
+INSERT INTO `ProductCategory` (`CategoryID`, `Name`) VALUES
+(1, 'Computing'),
+(2, 'AI'),
+(5, 'EV'),
+(6, 'Robotics'),
+(7, 'VR/AR'),
+(8, 'Gaming');
 
 -- --------------------------------------------------------
 
@@ -160,7 +198,8 @@ CREATE TABLE `Reviews` (
   `ReviewID` varchar(300) NOT NULL,
   `ProductName` varchar(150) NOT NULL,
   `Rating` int NOT NULL,
-  `ProductReview` varchar(500) DEFAULT NULL
+  `ProductReview` varchar(500) DEFAULT NULL,
+  `UserID` varchar(300) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
@@ -263,13 +302,21 @@ ALTER TABLE `Post`
 -- Indexes for table `Product`
 --
 ALTER TABLE `Product`
-  ADD PRIMARY KEY (`ProductID`);
+  ADD PRIMARY KEY (`ProductID`),
+  ADD KEY `Fk_Category_ID` (`CategoryID`);
+
+--
+-- Indexes for table `ProductCategory`
+--
+ALTER TABLE `ProductCategory`
+  ADD PRIMARY KEY (`CategoryID`);
 
 --
 -- Indexes for table `Reviews`
 --
 ALTER TABLE `Reviews`
-  ADD UNIQUE KEY `ReviewID` (`ReviewID`);
+  ADD UNIQUE KEY `ReviewID` (`ReviewID`),
+  ADD KEY `Reviewer` (`UserID`);
 
 --
 -- Indexes for table `Staff`
@@ -297,7 +344,13 @@ ALTER TABLE `PollVotes`
 -- AUTO_INCREMENT for table `Product`
 --
 ALTER TABLE `Product`
-  MODIFY `ProductID` int NOT NULL AUTO_INCREMENT;
+  MODIFY `ProductID` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
+
+--
+-- AUTO_INCREMENT for table `ProductCategory`
+--
+ALTER TABLE `ProductCategory`
+  MODIFY `CategoryID` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
 -- AUTO_INCREMENT for table `Staff`
@@ -341,6 +394,18 @@ ALTER TABLE `PollVotes`
 --
 ALTER TABLE `Post`
   ADD CONSTRAINT `Poster` FOREIGN KEY (`UserID`) REFERENCES `UAccount` (`UserID`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+--
+-- Constraints for table `Product`
+--
+ALTER TABLE `Product`
+  ADD CONSTRAINT `Fk_Category_ID` FOREIGN KEY (`CategoryID`) REFERENCES `ProductCategory` (`CategoryID`);
+
+--
+-- Constraints for table `Reviews`
+--
+ALTER TABLE `Reviews`
+  ADD CONSTRAINT `Reviewer` FOREIGN KEY (`UserID`) REFERENCES `UAccount` (`UserID`) ON DELETE SET NULL ON UPDATE CASCADE;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
