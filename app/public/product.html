@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+<style>
+body{
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: linear-gradient(to right, #19d7f8, #fd00da);
+
+} 
+.topnav-right {
+float: right;
+border: 2px solid  transparent; 
+border-radius: 20px;
+background-image: linear-gradient(#AFDBF5, #AFDBF5), radial-gradient(circle at top left, #fd00da, #19d7f8);
+background-origin: border-box; 
+background-clip: content-box, border-box;
+}
+.signup-bnt {
+top: 40px; 
+right: 80px;  
+text-decoration: none; 
+color: Black; 
+border: 2px solid  transparent; 
+border-radius: 20px; 
+background-image: linear-gradient(#AFDBF5, #AFDBF5), radial-gradient(circle at top left, #fd00da, #19d7f8);
+background-origin: border-box; 
+background-clip: content-box, border-box;  
+}
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 40px;
+}
+</style>
+</head>
+<body class="d-flex flex-column min-vh-100">
+    <div class = "navbar">
+        <img src= "/Techx.png" width ="150" height ="100">  
+        <div class="topnav-right">
+            <a style = "padding-right: 20px; padding-left: 20px; padding: 10px 25px 10px 25px; color: Black;" href  = "/home">Home</a>
+            <a style = "padding-right: 20px; padding: 10px 25px 10px 25px; color: Black;" href = "/about"> About </a>
+            <a style = "padding-right: 20px; padding: 10px 25px 10px 25px; color: Black;" href = "/tech"> Tech</a>
+            <a class ="signup-bnt" href ="signup.html"> Sign Up</a>
+        </div>
+    </div> 
+
+    <div class="container bg-light flex-grow-1 mb-4">
+        <div class="row">
+            <div class="col-md-6 px-0">
+                <img id="productImg" class="img-fluid rounded-end" style="max-height: 600px; object-fit: contain;">
+            </div>
+            <div class="col-md-6 mt-4 d-flex flex-column">
+                <h1 id="productName" class="mb-2"></h1>
+                <p><a id="productCategory" class="badge text-bg-secondary text-decoration-none mb-3 d-inline-block"></a></p>
+                <p class="mb-0 mt-auto">
+                    <span id="retailPrice" class="fs-4 me-2 fw-bold"></span><a id="productLink" class="btn btn-primary">Visit Product Page</a>
+                </p>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col mt-4">
+                <p id="productDesc" class="text-muted"></p>
+            </div>
+        </div>
+    </div>
+    <script>
+        const id = window.location.pathname.split('/').pop();
+        
+        async function loadProduct() {
+            const res = await fetch(`/products/${id}`);
+            const data = await res.json();
+
+            const product = data.results[0];
+
+            document.getElementById("productImg").src = `/product-images/${product.ProductImage}`;
+            document.getElementById("productName").innerText = product.ProductName;
+            document.getElementById("productCategory").href = `/tech/${product.CategoryID}`;
+            document.getElementById("productCategory").innerText = product.CategoryName;
+            document.getElementById("productDesc").innerText = product.ProductDesc;
+            document.getElementById("retailPrice").innerText = `$${product.RetailPrice}`;
+            document.getElementById("productLink").href = product.ProductLink;
+
+        }
+        loadProduct();
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+</body>
+</html> 

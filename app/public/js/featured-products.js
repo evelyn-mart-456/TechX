@@ -2,13 +2,13 @@
 function loadCarouselItem(product, active) {
     const carouselItem = `
     <div class="carousel-item ${active ? " active" : ""}">
-        <div class="d-flex justify-content-center">
+        <div class="d-flex justify-content-center">    
             <div class="card" style="width: 20rem; height: 24rem;">
                 <img src="product-images/${product.ProductImage}" class="card-img-top" alt="...">
                 <div class="card-body">
-                    <h5 class="card-title">${product.ProductName}</h5>
+                    <a class="link-underline-light" href="/product/${product.ProductID}"><h5 class="card-title">${product.ProductName}</h5></a>
                     <p class="card-text">${product.ProductDesc.slice(0, 60)}</p>
-                    <a href="${product.ProductLink}" class="btn btn-primary">Source</a>
+                    <a href="${product.ProductLink}" class="btn btn-primary me-1">Source</a><span>$${product.RetailPrice}</span>
                 </div>
             </div>
         </div>
@@ -36,6 +36,7 @@ async function buildCarousel() {
     const container = document.getElementById("featured-tech");
 
     container.innerHTML = `
+        <h2 class="mb-4 border-bottom">Featured Tech</h2>
         <div id="featured-carousel" class="carousel slide bg-dark" data-bs-interval="5000" data-bs-ride="carousel">
             <div class="carousel-inner" id="carousel-inner">
             </div>

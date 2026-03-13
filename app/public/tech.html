@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
 <style>
 body{
@@ -28,7 +29,7 @@ background-image: linear-gradient(#AFDBF5, #AFDBF5), radial-gradient(circle at t
 background-origin: border-box; 
 background-clip: content-box, border-box;  
 }
-.navbar {
+.navbar2 {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -36,20 +37,96 @@ background-clip: content-box, border-box;
 }
 </style>
 </head>
-<body>
-    <div class = "navbar">
-        <img src= "Techx.png" width ="150" height ="100">  
+<body class="d-flex flex-column min-vh-100">
+    <div class = "navbar2">
+        <img src= "/Techx.png" width ="150" height ="100">  
         <div class="topnav-right">
-            <a style = "padding-right: 20px; padding-left: 20px; padding: 10px 25px 10px 25px; color: Black;" href  = "home.html">Home</a>
-            <a style = "padding-right: 20px; padding: 10px 25px 10px 25px; color: Black;" href = "about.html"> About </a>
+            <a style = "padding-right: 20px; padding-left: 20px; padding: 10px 25px 10px 25px; color: Black;" href  = "/home">Home</a>
+            <a style = "padding-right: 20px; padding: 10px 25px 10px 25px; color: Black;" href = "/about"> About </a>
             <a style = "padding-right: 20px; padding: 10px 25px 10px 25px; color: Black;" href = "/tech"> Tech</a>
             <a class ="signup-bnt" href ="signup.html"> Sign Up</a>
         </div>
     </div> 
 
-    <div class="container">
-        
+    <div class="container-fluid bg-light flex-grow-1 d-flex flex-column p-0">
+        <div class="d-md-none mb-3">
+            <button class="navbar-toggler navbar-light"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#categorySidebar"
+                    aria-controls="categorySidebar"
+                    aria-expanded="false"
+                    aria-label="Toggle categories">
+                    ☰ Categories
+            </button>
+        </div>
+            <div class="row g-0 flex-grow-1">
+            <div class="col-md-2 bg-primary-subtle collapse d-md-block p-0" id="categorySidebar">
+                <div class="list-group list-group-flush" id="categoryList">
+                    <a href="/tech" id="main-link" class="list-group-item list-group-item-action text-light bg-primary active">All Tech</a>
+                </div>
+            </div>
+            <div class="col-md-10 p-4">
+                <div class="row g-4" id="productGrid"></div>
+            </div>
+        </div>
     </div>
+    <script>
+        function loadProductCard(product) {
+            const card = `
+            <div class="col-12 col-sm-6 col-lg-4 col-xl-3">
+                <div class="card h-100">
+                    <img src="/product-images/${product.ProductImage}" class="card-img-top" alt="...">
+                    <div class="card-body">
+                        <a class="link-underline-light" href="/product/${product.ProductID}"><h5 class="card-title">${product.ProductName}</h5></a>
+                        <p class="card-text">${product.ProductDesc.slice(0, 60)}</p>
+                        <a href="${product.ProductLink}" class="btn btn-primary me-1">Source</a><span>$${product.RetailPrice}</span>
+                    </div>
+                </div>
+            </div>
+            `;
+
+            return card;
+        }
+
+        const parts = window.location.pathname.split('/').filter(Boolean);
+        const categoryId = parts[1] ?? null;
+        const categoryList = document.getElementById("categoryList");
+        const productGrid = document.getElementById("productGrid");
+
+        function loadCategories(categories) {
+            if(categoryId)
+                document.getElementById("main-link").classList.remove("active");
+
+            categories.forEach(category => {
+                const isActive = Number(categoryId) === category.CategoryID ? "active" : "";
+                const categoryLink = `
+                    <a href="/tech/${category.CategoryID}" class="list-group-item list-group-item-action text-light bg-primary ${isActive}">${category.Name}</a>
+                `;
+
+                categoryList.insertAdjacentHTML("beforeend", categoryLink);
+            });
+        }
+        
+        async function getProducts() {
+            const res = await fetch('/get-products');
+            const data = await res.json();
+
+            loadCategories(data.categories);
+
+            data.products.forEach(product => {
+                if(categoryId && Number(categoryId) === product.CategoryID) {
+                    productGrid.insertAdjacentHTML("beforeend", loadProductCard(product));
+                } else if(!categoryId){
+                    productGrid.insertAdjacentHTML("beforeend", loadProductCard(product));
+                }
+            });
+        }
+
+        getProducts();
+
+        
+
+    </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
 </body>
 </html> 

@@ -87,6 +87,10 @@ app.get('/tech', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'tech.html'));
 });
 
+app.get('/tech/:id', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'tech.html'));
+});
+
 app.get('/staff-login', (req, res) => {
    res.sendFile(path.join(__dirname, 'public', 'staff-login.html'));
 });
@@ -101,6 +105,10 @@ app.get('/staff', (req, res) => {
     } else {
         res.redirect('/staff-login');
     }
+});
+
+app.get('/product/:id', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'product.html'));
 });
 
 function requireStaff(req, res, next) {
@@ -208,6 +216,19 @@ app.delete('/categories/:id', requireStaff, (req, res) => {
         }
 
         res.json({success: "true"});
+    });
+});
+
+app.get('/products/:id', (req, res) => {
+    const id = req.params.id;
+
+    db.query(get_product_sql, [id], (err, results) => {
+        if(err) {
+            console.error(err);
+            return res.status(500).send('Server error');
+        }
+
+        res.json({results: results});
     });
 });
 
