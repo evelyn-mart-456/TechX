@@ -1,0 +1,2 @@
+DELETE FROM UAccount
+WHERE UserID = ?;

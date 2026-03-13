@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+.topnav-right {
+  float: right;'
+border: 2px solid  transparent; 
+border-radius: 20px;
+background-image: linear-gradient(#42455a, #42455a), radial-gradient(circle at top left, #fd00da, #19d7f8);
+background-origin: border-box; 
+backgorund-clip; content-box, border-box;
+}
+
+body{
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: linear-gradient(to right, #19d7f8, #fd00da);
+
+} 
+
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 40px;
+}
+.poll-container {
+  background: white;
+  padding: 30px;
+  max-width: 500px;
+  margin: 50px auto;
+  border-radius: 15px;
+  box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+}
+
+.poll-container h2 {
+  text-align: center;
+}
+
+.poll-container button {
+  margin-top: 15px;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  background: #42455a;
+  color: white;
+  cursor: pointer;
+}
+
+.poll-container button:hover {
+  background: #2f3140;
+}
+</style>
+</head>
+<body>
+<div class = "navbar">
+
+<Img src= "Techx.png" width ="150" height ="100">
+<div class="topnav-right">
+<a style = "padding-right: 20px; padding-left: 20px; padding: 10px 25px 10px 25px; color: white;" href = "home.html">Home</a>
+<a style = "padding-right: 20px; padding: 10px 25px 10px 25px; color: white;" href = "about.html">About</a> 
+</div> 
+</div>
+<div class="poll-container">
+  <h2>Tech Poll of the Week</h2>
+
+  <form action="/votepoll" id="pollForm" method="post">
+    <input type="hidden" id="pollFormID" name="PollID" value="DP02">
+    <p>Which tech innovation excites you the most?</p>
+
+    <label>
+      <input type="radio" name="OptionID" value="DO03"> Artificial Intelligence <span data-option-id="DO03"></span>
+    </label><br>
+
+    <label>
+      <input type="radio" name="OptionID" value="DO04"> Virtual Reality <span data-option-id="DO04"></span>
+    </label><br>
+
+    <label>
+      <input type="radio" name="OptionID" value="DO05"> Electric Vehicles <span data-option-id="DO05"></span>
+    </label><br>
+
+    <button type="submit" id="submit">Vote</button>
+  </form>
+  <p id="pollError"></p>
+</div>
+<script>
+  const pollForm = document.getElementById('pollForm');
+  const pollError = document.getElementById('pollError');
+  const options = document.querySelectorAll('input[name="OptionID"]');
+  const submit = document.getElementById('submit');
+
+  async function checkVote() {
+    const pollID = document.getElementById('pollFormID').value;
+    const res = await fetch('/voted?PollID='+encodeURIComponent(pollID));
+    const data = await res.json();
+
+    if(data.voted) {
+      options.forEach(option => {
+        option.disabled = true;
+      });
+      submit.disabled = true;
+      submit.hidden = true;
+
+      data.results.forEach(row => {
+        const span = document.querySelector(
+          `span[data-option-id="${row.OptionID}"]`
+        );
+
+        if(span) {
+          span.textContent = `(${row.VoteCount} votes)`;
+          }
+      });
+    }
+  }
+
+  checkVote();
+
+  pollForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const formData = new FormData(pollForm);
+    const res = await fetch('/votepoll', {
+      method: 'POST',
+      body: new URLSearchParams(formData)
+    });
+
+    const data = await res.json();
+
+    if(data.results) {
+      options.forEach(option => {
+        option.disabled = true;
+      });
+      submit.disabled = true;
+      submit.hidden = true;
+
+      data.results.forEach(row => {
+        const span = document.querySelector(
+          `span[data-option-id="${row.OptionID}"]`
+        );
+
+        if(span) {
+          span.textContent = `(${row.VoteCount} votes)`;
+          }
+      });
+    }
+
+    if(data.message)
+      pollError.textContent = data.message;
+  });
+</script>
+</body>
+</html>
