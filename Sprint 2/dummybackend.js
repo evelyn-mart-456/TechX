@@ -3,7 +3,7 @@ const mysql = require('mysql2');
 const bodyParser = require('body-parser');
 const crypto = require('crypto');
 const path = require('path');
-const dbConfig = require('./dbConfig');
+const dbConfig = require('./dbConfig.js');
 const fs = require('fs');
 const session = require('express-session');
 
