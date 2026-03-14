@@ -9,8 +9,8 @@ const session = require('express-session');
 
 
 //load sql files
-const PostReviewSQL = fs.readFileSync(path.join(__dirname, 'sql', 'post_review.sql'), 'utf8');
-const GetReviewSQL = fs.readFileSync(path.join(__dirname, 'sql', 'get_reviews.sql'), 'utf8');
+const PostReviewSQL = fs.readFileSync(path.join(__dirname, 'sql', 'PostReview.sql'), 'utf8');
+const GetReviewSQL = fs.readFileSync(path.join(__dirname, 'sql', 'GetReview.sql'), 'utf8');
 
 const app = express();
 const port = 3000;
