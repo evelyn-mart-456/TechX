@@ -46,6 +46,7 @@
 
           </tbody>
         </table>
+        <p id="categoryError" class="text-danger"></p>
         <div class="table-responsive">
         <div class="container mt-5">
           <table class="table table-sm fs-6 text-nowrap">
@@ -65,6 +66,7 @@
 
             </tbody>
           </table>
+          <p id="productError" class="text-danger"></p>
         </div>
       </div>
       </div>
@@ -75,6 +77,8 @@
      * Product Category functions
      */
     const catBody = document.getElementById("categoryBody");
+    const catError = document.getElementById("categoryError");
+    const prodError = document.getElementById("productError");
     
     function loadCategoryRow(category) {
       const row = document.createElement("tr");
@@ -95,22 +99,45 @@
       const name = row.querySelector('[name="name"]').value;
       const catID = row.dataset.id; 
       
-      if(!name.trim())
-        return;
+      if(!name.trim()) {
+        catError.innerText = "You must supply a name.";
+        return false;
+      }
 
       formData.append("name", name);
 
-      await fetch(`/categories/${row.dataset.id}`, {
+      const res = await fetch(`/categories/${row.dataset.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name })
       });
+
+      const data = await res.json();
+
+      if(data.error) {
+        catError.innerText = data.error;
+        return false;
+      }
+
+      catError.innerText = "";
+
+      return true;
     }
 
     async function deleteCategory(row) {
-      await fetch(`/categories/${row.dataset.id}`, {
+      const res = await fetch(`/categories/${row.dataset.id}`, {
         method: "DELETE"
       });
+
+      const data = await res.json();
+
+      if(data.error) {
+        catError.innerText = data.error;
+        return false;
+      }
+
+      catError.innerText = "";
+      return true;
     }
 
     function loadCategories(categories) {
@@ -136,20 +163,20 @@
 
         if(button.name === "save") {
           const row = button.closest("tr");
-          await saveCategoryRow(row);
-          await getProducts();
+          const ok = await saveCategoryRow(row);
+          if(ok) await getProducts();
         }
 
         if(button.name === "create") {
           const row = button.closest("tr");
-          await createCategory(row);
-          await getProducts();
+          const ok = await createCategory(row);
+          if(ok) await getProducts();
         }
 
         if(button.name === "delete") {
           const row = button.closest("tr");
-          await deleteCategory(row);
-          await getProducts();
+          const ok = await deleteCategory(row);
+          if(ok) await getProducts();
         }
 
       });
@@ -157,14 +184,20 @@
     async function createCategory(row) {
       const name = row.querySelector('[name="name"]').value;
       
-      if(!name.trim())
-        return;
+      if(!name.trim()) {
+        catError.innerText = "You must supply a name.";
+        return false;
+      }
 
       await fetch('/categories', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name })
       });
+
+      catError.innerText = "";
+
+      return true;
     }
 
 
@@ -204,27 +237,61 @@
       const catID = row.querySelector('[name="category"]').value;
       const price = row.querySelector('[name="price"]').value;
 
-      if(!name.trim() || !desc.trim() || !link.trim() || !image)
-        return;
+      if(!name.trim() || !desc.trim() || !link.trim() || !price.trim() || !image) {
+        prodError.innerText = "You must fill in all fields.";
+        return false;
+      }
+
+      if(!Number.isFinite(Number(price.trim()))) {
+        prodError.innerText = "The price must be a number.";
+        return false;
+      }
 
       formData.append("name", name);
       formData.append("desc", desc);
-      formData.append("image", image);
+      if(image)
+        formData.append("image", image);
+      else {
+        prodError.innerText = "You must supply an image";
+        return false;
+      }
       formData.append("featured", checked);
       formData.append("link", link);
       formData.append("catID", catID);
       formData.append("price", price);
 
-      await fetch(`/products`, {
+      const res = await fetch(`/products`, {
         method: "POST",
         body: formData
       });
+
+      const data = await res.json();
+
+      if(data.error) {
+        prodError.innerText = data.error;
+        return false;
+      }
+
+      prodError.innerText = "";
+
+      return true;
     }
 
     async function deleteProductRow(row) {
-      await fetch(`/products/${row.dataset.id}`, {
+      const res = await fetch(`/products/${row.dataset.id}`, {
         method: "DELETE"
       });
+
+      const data = await res.json();
+
+      if(data.error) {
+        prodError.innerText = data.error;
+        return false;
+      }
+
+      prodError.innerText = "";
+
+      return true;
     }
 
     async function saveProductRow(row) {
@@ -238,6 +305,16 @@
       const catID = row.querySelector('[name="category"]').value;
       const price = row.querySelector('[name="price"]').value;
 
+      if(!name.trim() || !desc.trim() || !link.trim() || !price.trim() || !catID) {
+        prodError.innerText = "You must fill in all fields.";
+        return false;
+      }
+
+      if(!Number.isFinite(Number(price.trim()))) {
+        prodError.innerText = "The price must be a number.";
+        return false;
+      }
+
       formData.append("name", name);
       formData.append("desc", desc);
       if(image)
@@ -247,10 +324,20 @@
       formData.append("catID", catID);
       formData.append("price", price);
 
-      await fetch(`/products/${row.dataset.id}`, {
+      const res = await fetch(`/products/${row.dataset.id}`, {
         method: "PATCH",
         body: formData
       });
+
+      const data = res.json();
+
+      if(data.error) {
+        prodError.innerText = data.error;
+        return false;
+      }
+
+      prodError.innerText = "";
+      return true;
     }
 
     const prodBody = document.getElementById("productBody");
@@ -260,20 +347,20 @@
 
         if(button.name === "save") {
           const row = button.closest("tr");
-          await saveProductRow(row);
-          await getProducts();
+          const ok = await saveProductRow(row);
+          if(ok) await getProducts();
         }
 
         if(button.name === "create") {
           const row = button.closest("tr");
-          await createProductRow(row);
-          await getProducts();
+          const ok = await createProductRow(row);
+          if(ok) await getProducts();
         }
 
         if(button.name === "delete") {
           const row = button.closest("tr");
-          await deleteProductRow(row);
-          await getProducts();
+          const ok = await deleteProductRow(row);
+          if(ok) await getProducts();
         }
 
       });

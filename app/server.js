@@ -182,6 +182,9 @@ app.get('/featured-products', (req, res) => {
 app.post('/categories', requireStaff, (req, res) => {
     const name = req.body.name;
 
+    if(!name.trim())
+        return res.json({error: "You must supply a category name"});
+
     db.query(create_product_category_sql, [name], (err, results) => {
         if(err) {
             console.error(err);
@@ -195,6 +198,9 @@ app.post('/categories', requireStaff, (req, res) => {
 app.patch('/categories/:id', requireStaff, (req, res) => {
     const name = req.body.name;
     const id = req.params.id;
+
+    if(!name.trim())
+        return res.json({error: "You must supply a category name"});
 
     db.query(update_product_category_sql, [name, id], (err, results) =>{
         if(err) {
@@ -240,9 +246,15 @@ app.post('/products', requireStaff, uploadProductImg.single("image"), (req, res)
     const desc = req.body.desc;
     const link = req.body.link;
     const catID = req.body.catID;
-    const price = req.body.price;
+    const price = Number(req.body.price);
 
     const featured = req.body.featured === "true";
+
+    if(!name || !desc || !link || !catID || !price || !featured)
+        return res.json({error: "You must fill in all fields."});
+
+    if(!Number.isFinite(price))
+        return res.json({error: "The price must be a number."});
 
     db.query(create_product_sql, [name, desc, filename, featured, link, catID, price], (err, results) => {
         if(err) {
@@ -262,11 +274,17 @@ app.patch('/products/:id', requireStaff, uploadProductImg.single("image"), (req,
     const desc = req.body.desc;
     const link = req.body.link;
     const catID = req.body.catID;
-    const price = req.body.price;
+    const price = Number(req.body.price);
 
     const featured = req.body.featured === "true";
 
     const id = req.params.id;
+
+    if(!name || !desc || !link || !catID || !price || !featured)
+        return res.json({error: "You must fill in all fields."});
+
+    if(!Number.isFinite(price))
+        return res.json({error: "The price must be a number."});
 
     if(file) {
         const filename = req.file.filename;
@@ -467,6 +485,10 @@ app.get('/staff-logout', (req, res) => {
 
 app.post('/staff-register', (req, res) => {
     const username = req.body.username;
+
+    if(!req.body.password)
+        return res.json({error: 'You must enter a password.'});
+
     const hashedPassword = crypto.createHash('sha256').update(req.body.password).digest('hex');
     const email = req.body.email;
 

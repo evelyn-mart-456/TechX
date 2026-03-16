@@ -26,8 +26,6 @@ async function loadFeaturedProducts(carousel) {
         const active = index === 0;
         const carouselItem = loadCarouselItem(product, active);
 
-        console.log(product);
-
         carousel.insertAdjacentHTML("beforeend", carouselItem);
     });
 }
