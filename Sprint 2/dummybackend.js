@@ -62,11 +62,11 @@ app.get('/login', (req, res) => {
     res.sendFile(path.join(__dirname, 'login.html'));
 });
 //temporarily bring register to the root for testing purposes
-app.get('/signup', (req, res) => {
-    res.sendFile(path.join(__dirname, 'signup.html'));
+app.get('/register', (req, res) => {
+    res.sendFile(path.join(__dirname, 'register.html'));
 });
 
-app.post('/signup', (req, res) => {
+app.post('/register', (req, res) => {
     const username = req.body.username;
     const hashedPassword = crypto.createHash('sha256').update(req.body.password).digest('hex');
     const email = req.body.email;
@@ -99,6 +99,10 @@ app.get('/Reviews', (req, res) => {
     res.sendFile(path.join(__dirname, 'Reviews.html'));
 });
 
+app.get('/Reviews', (req, res) => {
+    res.sendFile(path.join(__dirname, 'Reviews.html'));
+});
+//
 app.get('/api/Reviews', (req, res) => {
     db.query(GetReviewSQL, (err, results) => {
         if (err) {

@@ -13,7 +13,7 @@ const get_user_sql = fs.readFileSync('./db/get_user.sql', 'utf8');
 const create_vote_sql = fs.readFileSync('./db/create_vote.sql', 'utf8');
 const get_votes_sql = fs.readFileSync('./db/get_votes.sql', 'utf8');
 const get_user_voted_sql = fs.readFileSync('./db/get_user_voted.sql', 'utf8');
-const post_review_sql = fs.readFileSync('./db/post_review.sql', 'utf8');
+const create_review_sql = fs.readFileSync('./db/create_review.sql', 'utf8');
 const get_reviews_sql = fs.readFileSync('./db/get_reviews.sql', 'utf8');
 
 const app = express();
@@ -206,7 +206,7 @@ app.post('/submit_review', (req, res) => {
     return res.status(401).json({ success: false, message: 'Log in to submit review' });
   }
 
-    db.query(post_review_sql, [reviewID, prod, review, rating, req.session.UserID], (err, result) => {
+    db.query(create_review_sql, [reviewID, prod, review, rating, req.session.UserID], (err, result) => {
         if (err) {
             console.error(err);
             return res.status(500).json({ success: false, message: "Log in to submit review" });
