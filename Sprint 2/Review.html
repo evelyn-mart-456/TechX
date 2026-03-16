@@ -6,10 +6,20 @@ body {
   margin: 0;
   font-family: Arial, sans-serif;
   background: linear-gradient(to right, #19d7f8, #fd00da);
-  display: flex;
+}
+.topnav-right {
+float: right;
+border: 2px solid  transparent; 
+border-radius: 20px;
+background-image: linear-gradient(#AFDBF5, #AFDBF5), radial-gradient(circle at top left, #fd00da, #19d7f8);
+background-origin: border-box; 
+background-clip: content-box, border-box;
+}
+.center-wrapper {
+ display: flex;
   justify-content: center;
   align-items: center;
-  height: 100vh;
+  height: calc(100vh - 120px); /* Adjust for navbar and padding */
 }
 .review-container {
   background: white;
@@ -48,56 +58,66 @@ button:hover {
 </style>
 </head>
 <body>
+
+  <div class = "navbar">
+<Img src= "Techx.png" width ="150" height ="100">  
+<div class="topnav-right">
+<a style = "padding-right: 20px; padding-left: 20px; padding: 10px 25px 10px 25px; color: Black;" href  = "/home">Home</a>
+<a style = "padding-right: 20px; padding: 10px 25px 10px 25px; color: Black;" href = "/login"> Login </a>
+<a class ="padding-right" href ="/Reviews"> See reviews</a>
+</div>
+</div> 
+
+  <div class="center-wrapper">
     <div class="review-container">
         <h2>Create Your Review</h2>
         <form id = "reviewForm"> Create your review here
         <input name="product_name" type="text" placeholder="Product Name" required>
-        <input name="review_text" type="text" placeholder="Your Review">
         <input name="rating" type="number" placeholder="Rating (1-5)" min="1" max="5" required>
+        <input name="review_text" type="text" placeholder="Your Review">
         <button type = "submit">Submit Review</button>
-        </div>
-    </form>
-
+        </form>
+    </div>
+  </div>
 </body>
 
 <script>
-    const reviewForm = document.getElementById('reviewForm');
-reviewForm.addEventListener('submit', async function(event) {
+  const reviewForm = document.getElementById('reviewForm');
+  reviewForm.addEventListener('submit', async function(event) {
     event.preventDefault();
 
-    const formData = new FormData(reviewForm);
-    const payload = {
-        product_name: formData.get('product_name'),
-        review_text: formData.get('review_text'),
-        rating: formData.get('rating')
-    };
-    if(!payload.product_name || !payload.rating || payload.rating < 1 || payload.rating > 5) {
-        alert('Please fill in all required fields.');
-        return;
+    const formData = new FormData(event.target);
+
+    if(!formData.get('product_name') || !formData.get('rating') || formData.get('rating') < 1 || formData.get('rating') > 5) {
+      alert('Please fill in all required fields.');
+      return; 
     }
-    
-    console.log('Submitting review:', payload);
 
-const res = await fetch('submit_review.php', {
-    method: 'POST',
-    headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(payload)
-});
-console.log('Server response:', res.status);
+    console.log('Submitting review:', Object.fromEntries(formData));
 
-const data = await res.json().catch(err => {
-    console.error('Error parsing JSON:', err);
-    alert('An error occurred while submitting your review. Please try again.');
-    return;
-});
-if (data.success) {
-    alert('Review submitted successfully!');
-} else {
-    alert('Failed to submit review. Please try again.');
-}
-});
+    try {
+      const res = await fetch('/submit_review', {
+        method: 'POST',
+        headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              product_name: formData.get('product_name'),
+              review_text: formData.get('review_text'),
+              rating: formData.get('rating')
+            })
+      });
+
+      const data = await res.json();
+      console.log("Server response:", data);
+
+      if (data.success) {
+        alert(data.message);
+      } else {
+        alert(data.message || "An unknown error occurred while submitting your review.");
+      }
+    } catch (error) {
+      console.error('Error submitting review:', error);
+      alert('An error occurred while submitting your review. Please try again later.');
+    }
+  });
 </script>
 </html>

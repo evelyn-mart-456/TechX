@@ -15,7 +15,9 @@ const GetReviewSQL = fs.readFileSync(path.join(__dirname, 'sql', 'GetReview.sql'
 const app = express();
 const port = 3000;
 
-app.use(bodyParser.urlencoded({ extended: false}));
+
+app.use(express.urlencoded({ extended: true}));
+app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(session({
     secret: 'change-this-later',
@@ -30,22 +32,70 @@ const db = mysql.createConnection(dbConfig);
 app.get('/Review', (req, res) => {
     res.sendFile(path.join(__dirname, 'Review.html'));
 });
+
+app.post('/login', (req, res) => {
+    const { username, password } = req.body;
+
+    const query = 'SELECT UserID FROM uaccount WHERE Username = ? AND Password = ?';
+
+    db.query(query, [username, password], (err, results) => {
+        if (err) {
+            return res.status(500).json({ success: false, message: err.message });
+        }
+
+        if (results.length == 0) {
+            return res.status(401).json({ success: false, message: 'Invalid username or password' });
+        }
+
+        req.session.UserID = results[0].UserID;
+        res.json({ success: true, message: 'Login successful' });
+    });
+});
+//temporarily bring home to the root for testing purposes
+app.get('/home', (req, res) => {
+    res.sendFile(path.join(__dirname, 'home.html'));
+});
+//temporarily bring login to the root for testing purposes
+app.get('/login', (req, res) => {
+    res.sendFile(path.join(__dirname, 'login.html'));
+});
+//temporarily bring register to the root for testing purposes
+app.get('/register', (req, res) => {
+    res.sendFile(path.join(__dirname, 'register.html'));
+});
+
+//get the reviews html page
+app.get('/Reviews', (req, res) => {
+    res.sendFile(path.join(__dirname, 'Reviews.html'));
+});
+
+app.get('/api/Reviews', (req, res) => {
+    db.query(GetReviewSQL, (err, results) => {
+        if (err) {
+            console.error(err);
+            return res.status(500).json({ success: false, message: err.message });
+        }   
+        res.json({ success: true, reviews: results });
+    });
+});
+
 app.post('/submit_review', (req, res) => {
     const reviewID = crypto.randomUUID();
     const prod = req.body.product_name;
-    const review = req.body.review_text;
     const rating = req.body.rating;
+    const review = req.body.review_text;
 
-    if (!req.session.UserID) {
-        return res.status(401).send('log in to submit review');
-    }
+    
+  if (!req.session.UserID) {
+    return res.status(401).json({ success: false, message: 'Log in to submit review' });
+  }
 
-    db.query(PostReviewSQL, [reviewID, prod, review, rating], (err, result) => {
+    db.query(PostReviewSQL, [reviewID, prod, review, rating, req.session.UserID], (err, result) => {
         if (err) {
             console.error(err);
-            return res.status(500).send('server error');
+            return res.status(500).json({ success: false, message: "Log in to submit review" });
         }
-        res.status(200).send('Review submitted successfully');
+        res.json({ success: true, message: "Review submitted successfully" });
     });
 });
 app.listen(3000, () => {
