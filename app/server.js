@@ -13,6 +13,8 @@ const get_user_sql = fs.readFileSync('./db/get_user.sql', 'utf8');
 const create_vote_sql = fs.readFileSync('./db/create_vote.sql', 'utf8');
 const get_votes_sql = fs.readFileSync('./db/get_votes.sql', 'utf8');
 const get_user_voted_sql = fs.readFileSync('./db/get_user_voted.sql', 'utf8');
+const post_review_sql = fs.readFileSync('./db/post_review.sql', 'utf8');
+const get_reviews_sql = fs.readFileSync('./db/get_reviews.sql', 'utf8');
 
 const app = express();
 const port = 3000;
@@ -51,6 +53,25 @@ app.get('/register', (req, res) => {
 app.get('/new-tech', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'new-tech.html'));
 });
+
+app.get('/Review', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'Review.html'));
+});
+
+app.get('/Reviews', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'Reviews.html'));
+});
+//gets the reviews from the database and sends them to the frontend
+app.get('/api/Reviews', (req, res) => {
+    db.query(get_reviews_sql, (err, results) => {
+        if (err) {
+            console.error(err);
+            return res.status(500).json({ success: false, message: err.message });
+        }   
+        res.json({ success: true, reviews: results });
+    });
+});
+
 
 app.post('/register', (req, res) => {
     const username = req.body.username;
@@ -172,6 +193,26 @@ app.post('/votepoll', (req, res) => {
     } else {
         res.json( {error: "You must be logged in to vote."} );
     }
+});
+
+app.post('/submit_review', (req, res) => {
+    const reviewID = crypto.randomUUID();
+    const prod = req.body.product_name;
+    const rating = req.body.rating;
+    const review = req.body.review_text;
+
+    
+  if (!req.session.UserID) {
+    return res.status(401).json({ success: false, message: 'Log in to submit review' });
+  }
+
+    db.query(post_review_sql, [reviewID, prod, review, rating, req.session.UserID], (err, result) => {
+        if (err) {
+            console.error(err);
+            return res.status(500).json({ success: false, message: "Log in to submit review" });
+        }
+        res.json({ success: true, message: "Review submitted successfully" });
+    });
 });
 
 app.listen(port, () => {

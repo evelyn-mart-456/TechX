@@ -11,6 +11,8 @@ const session = require('express-session');
 //load sql files
 const PostReviewSQL = fs.readFileSync(path.join(__dirname, 'sql', 'PostReview.sql'), 'utf8');
 const GetReviewSQL = fs.readFileSync(path.join(__dirname, 'sql', 'GetReview.sql'), 'utf8');
+const get_user_sql = fs.readFileSync(path.join(__dirname, 'sql', 'get_user.sql'), 'utf8');
+const create_user = fs.readFileSync(path.join(__dirname, 'sql', 'create_user.sql'), 'utf8');
 
 const app = express();
 const port = 3000;
@@ -60,9 +62,37 @@ app.get('/login', (req, res) => {
     res.sendFile(path.join(__dirname, 'login.html'));
 });
 //temporarily bring register to the root for testing purposes
-app.get('/register', (req, res) => {
-    res.sendFile(path.join(__dirname, 'register.html'));
+app.get('/signup', (req, res) => {
+    res.sendFile(path.join(__dirname, 'signup.html'));
 });
+
+app.post('/signup', (req, res) => {
+    const username = req.body.username;
+    const hashedPassword = crypto.createHash('sha256').update(req.body.password).digest('hex');
+    const email = req.body.email;
+
+    db.query(get_user_sql, [username], (err, results) => {
+        if(err) {
+            console.error('Database error:', err);
+        }
+
+        if(results.length > 0) {
+            res.json({error: "Error: username is taken."});
+        } else {
+            db.query(create_user, [crypto.randomUUID(), email, username, hashedPassword], (err, results) => {
+                if(err) {
+                    console.error('Database error:', err);
+                    return res.status(500).send('Server error');
+                }
+                if(results.affectedRows === 0)
+                    return res.json({error: 'Username already taken'});
+
+                res.json({success: true});
+            });
+        }
+    });
+});
+
 
 //get the reviews html page
 app.get('/Reviews', (req, res) => {
