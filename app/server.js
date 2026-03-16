@@ -250,7 +250,7 @@ app.post('/products', requireStaff, uploadProductImg.single("image"), (req, res)
 
     const featured = req.body.featured === "true";
 
-    if(!name || !desc || !link || !catID || !price || !featured)
+    if(!name || !desc || !link || !catID || !price)
         return res.json({error: "You must fill in all fields."});
 
     if(!Number.isFinite(price))
@@ -280,7 +280,7 @@ app.patch('/products/:id', requireStaff, uploadProductImg.single("image"), (req,
 
     const id = req.params.id;
 
-    if(!name || !desc || !link || !catID || !price || !featured)
+    if(!name || !desc || !link || !catID || !price)
         return res.json({error: "You must fill in all fields."});
 
     if(!Number.isFinite(price))
