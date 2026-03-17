@@ -94,7 +94,7 @@ async function voteBrand(event){
     let selected = document.querySelector('input[name="techbrand"]:checked');
     if(!selected){ alert("Please select an option"); return; }
 
-    const response = await fetch("http://localhost:3000/votepoll", {
+    const response = await fetch("/votepoll", {
         method: "POST",
         headers: {"Content-Type": "application/json"},
         body: JSON.stringify({ PollID: "techBrand", OptionID: selected.value })
@@ -108,7 +108,7 @@ async function voteFather(event){
     let selected = document.querySelector('input[name="father"]:checked');
     if(!selected){ alert("Please select an option"); return; }
 
-    const response = await fetch("http://localhost:3000/votepoll", {
+    const response = await fetch("/votepoll", {
         method: "POST",
         headers: {"Content-Type": "application/json"},
         body: JSON.stringify({ PollID: "father", OptionID: selected.value })
