@@ -15,11 +15,19 @@ background-image: linear-gradient(#AFDBF5, #AFDBF5), radial-gradient(circle at t
 background-origin: border-box; 
 background-clip: content-box, border-box;
 }
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 100px; /*height of logo*/
+  padding: 0 20px;
+}
 .center-wrapper {
   display: flex;
   justify-content: center;
   align-items: center;
-  height: calc(100vh - 70px); /* Adjust for navbar and padding */
+  padding-top: calc(100px - 20px); /* Adjust for navbar and padding */
+  height: calc(100vh - 100px); /* Adjust for navbar and padding */
 }
 .review-container {
   background: white;
@@ -64,7 +72,7 @@ button:hover {
 <div class="topnav-right">
 <a style = "padding-right: 20px; padding-left: 20px; padding: 10px 25px 10px 25px; color: Black;" href  = "/home">Home</a>
 <a style = "padding-right: 20px; padding: 10px 25px 10px 25px; color: Black;" href = "/about"> About </a>
-<a class ="padding-right" href ="/Review"> Leave a review</a>
+<a class ="padding-right padding: 10px 25px 10px 25px; color: Black;" href ="/Review"> Leave a review</a>
 </div>
 </div> 
 

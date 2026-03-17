@@ -20,6 +20,7 @@ const app = express();
 const port = 3000;
 
 app.use(bodyParser.urlencoded({ extended: false}));
+app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(session({
     secret: 'change-this-later',
@@ -112,7 +113,7 @@ app.post('/login', (req, res) => {
 
         if(results.length > 0) {
             if(results[0].Password_Hash === hashedPassword && results[0].Username === username) {
-                req.session.userId = results[0].UserID;
+                req.session.userId = results[0].UserID
                 req.session.username = results[0].Username;
                 res.json( {success: true} );
             }
@@ -201,15 +202,14 @@ app.post('/submit_review', (req, res) => {
     const rating = req.body.rating;
     const review = req.body.review_text;
 
-    
-  if (!req.session.UserID) {
-    return res.status(401).json({ success: false, message: 'Log in to submit review' });
-  }
+    if (!req.session.userId) {
+        return res.status(401).json({ success: false, message: 'Log in to submit review' });
+    }
 
-    db.query(create_review_sql, [reviewID, prod, review, rating, req.session.UserID], (err, result) => {
+    db.query(create_review_sql, [reviewID, prod, review, rating, req.session.userId], (err, result) => {
         if (err) {
             console.error(err);
-            return res.status(500).json({ success: false, message: "Log in to submit review" });
+            return res.status(500).json({ success: false, message: err.message });
         }
         res.json({ success: true, message: "Review submitted successfully" });
     });
