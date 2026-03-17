@@ -1,0 +1,1 @@
+INSERT INTO ProductCategory (Name) VALUES (?);
