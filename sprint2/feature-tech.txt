@@ -1,0 +1,49 @@
+Problem Statement
+-----------------
+Our site needs the ability for users to add and view different products and tech in order to be able to comment, view and compare. The main pages this feature will add will be a page for staff users to add tech to the site and a "featured tech" page that showcases a carousel of some products the users can view.
+
+User Flow
+-----------------
+For staff, first step is navigate to add products page. Enter the product information into the form, and then submit the form, which will add the product to the database.
+
+For users, on the "featured tech" page, a list of products will load from the database including a name and a picture. Clicking on the product will bring up a product page that shows more details in depth, including a description and a link to the official product page.
+
+Technical Plan
+-----------------
+Files to be created: product-management.html, change-product.html, add-product.html, featured-tech.html, product.html, admin-login.html, admin-register.html
+
+API Changes
+-----------------
+routes: /add-product, /edit-product, /get-product, /get-products, /get-featured-products, /admin-login, /admin-register
+
+/admin-login: Lets staff members login to be able to add products after activated
+
+/admin-register: Lets staff members register
+
+/add-product: Gets the data from the add-product.html form, submits it to the "Product" table
+
+/get-product: Gets the product row by id from the database
+
+/get-featured-products: Selects all products marked "Featured" from the database
+
+/get-products: Loads all products from the Product table
+
+/edit-product: Form prepopulates with current product info, submitting edits that row
+
+Database Changes
+-----------------
+"Product" table needs to be added.
+
+ProductID, ProductName, ProductDescription, ProductImageFilename, Featured, ProductLink
+
+"Staff" table needs to be added.
+
+StaffID, UserName, Email, HashedPassword, Activated
+
+Acceptance Criteria
+------------------
+*Staff must be able to login and register
+*Staff must be able to add new products
+*Staff must be able to edit current products
+*Users must be able to view featured tech
+*Users must be able to click on product links and view all info on that product

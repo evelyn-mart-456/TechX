@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="">
+  <head>
+    <meta charset="utf-8">
+    <title>Staff</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+  </head>
+  <body>
+    <nav class="navbar navbar-expand-lg bg-body-tertiary">
+      <div class="container d-flex justify-content-center">
+        <a class="navbar-brand" href="/staff">Admin panel</a>
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+          <li class="nav-item">
+            <a class="nav-link active" aria-current="page" href="/staff">Staff</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/product-management">Product Management</a> 
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/staff-logout">Logout</a>
+          </li>
+        </ul>
+      </div>
+    </nav>
+    <main>
+      <div class="container mt-5">
+        <table class="table">
+          <thead>
+            <tr class="table-dark">
+              <th>Username</th>
+              <th>Email</th>
+              <th>Activation Status</th>
+            </tr>
+          </thead>
+          <tbody id="staff">
+          </tbody>
+        </table>
+      </div>
+    </main>
+    
+    <script>
+    const staffTable = document.getElementById("staff");
+    
+    async function getStaff() {
+      staffTable.innerHTML = "";
+      
+      const sessionRes = await fetch('/staff-session');
+      const sessionData = await sessionRes.json();
+      
+      if(sessionData.error) {
+        console.log(sessionData.error);
+        return;
+      }
+      
+      const staffId = Number(sessionData.staffId);
+      const staffUser = sessionData.staffUsername;
+    
+      const res = await fetch('/get-staff');
+      const data = await res.json();
+      
+      data.results.forEach( user => {
+        let row = document.createElement("tr");
+        let userTd = document.createElement("td");
+        userTd.innerHTML = user.Username;
+        
+        let emailTd = document.createElement("td");
+        emailTd.innerHTML = user.Email;
+        
+        let activeTd = document.createElement("td");
+        let activeCheck = document.createElement("input");
+        
+        activeCheck.type = "checkbox";
+        activeCheck.checked = user.Activated;
+        activeCheck.setAttribute("data-staff-id", Number(user.StaffID));
+        
+        if(Number(user.StaffID) === Number(staffId))
+          activeCheck.disabled = true;
+        
+        activeTd.append(activeCheck);
+        
+        row.appendChild(userTd);
+        row.appendChild(emailTd);
+        row.appendChild(activeTd);
+        
+        staffTable.appendChild(row);
+      });
+    }
+    
+    getStaff();
+    
+    staffTable.addEventListener("change", async (event) => {
+      if(event.target.matches('input')) {
+        const staffId = event.target.closest("input").dataset.staffId;
+        
+        const res = await fetch('/staff-activate', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ staffId: staffId })
+        });
+
+        const data = await res.json();
+        
+        if(!data.success)
+          console.log("Error updating activation.");
+        
+        getStaff();
+      }
+    });
+      
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+  </body>
+</html>

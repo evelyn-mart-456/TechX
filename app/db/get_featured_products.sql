@@ -1,0 +1,1 @@
+SELECT * FROM Product WHERE Featured = true;
