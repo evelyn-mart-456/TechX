@@ -24,6 +24,6 @@ Database changes: New Table: Review(Primary Key ReviewID, Varchar ProductName, I
  not certain if I would have new fields in existing database.
 
 Acceptance Criteria
--webpage must clearly state the product, what kind of product it is, the rating(out of 5 stars) chart, the box to write the review, and the publish button
+-webpage must clearly state the product, the rating(out of 5 stars) chart, the box to write the review, and the publish button
 -there must be a working link from the home page to the review page
 -the review must be able to enter the database

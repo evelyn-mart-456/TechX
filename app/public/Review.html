@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: linear-gradient(to right, #19d7f8, #fd00da);
+}
+.topnav-right {
+float: right;
+border: 2px solid  transparent; 
+border-radius: 20px;
+background-image: linear-gradient(#AFDBF5, #AFDBF5), radial-gradient(circle at top left, #fd00da, #19d7f8);
+background-origin: border-box; 
+background-clip: content-box, border-box;
+}
+.center-wrapper {
+ display: flex;
+  justify-content: center;
+  align-items: center;
+  height: calc(100vh - 120px); /* Adjust for navbar and padding */
+  padding: 20px;
+}
+.review-container {
+  background: white;
+  padding: 40px;
+  width: 350px;
+  border-radius: 15px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+  text-align: center;
+}
+h2 {
+  margin-bottom: 20px;
+}
+
+input {
+  width: 100%;
+  padding: 12px;
+  margin: 10px 0;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+}
+
+button {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  background: #42455a;
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+button:hover {
+  background: #2f3140;
+}
+</style>
+</head>
+<body>
+
+  <div class = "navbar">
+<Img src= "Techx.png" width ="150" height ="100">  
+<div class="topnav-right">
+<a style = "padding-right: 20px; padding-left: 20px; padding: 10px 25px 10px 25px; color: Black;" href  = "/home">Home</a>
+<a style = "padding-right: 20px; padding: 10px 25px 10px 25px; color: Black;" href = "/login"> Login </a>
+<a class ="padding-right" href ="/Reviews"> See reviews</a>
+</div>
+</div> 
+
+  <div class="center-wrapper">
+    <div class="review-container">
+        <h2>Create Your Review</h2>
+        <form id = "reviewForm"> Create your review here
+        <input name="product_name" type="text" placeholder="Product Name" required>
+        <input name="rating" type="number" placeholder="Rating (1-5)" min="1" max="5" required>
+        <input name="review_text" type="text" placeholder="Your Review">
+        <button type = "submit">Submit Review</button>
+        </form>
+    </div>
+  </div>
+</body>
+
+<script>
+  const reviewForm = document.getElementById('reviewForm');
+  reviewForm.addEventListener('submit', async function(event) {
+    event.preventDefault();
+
+    const formData = new FormData(event.target);
+
+    if(!formData.get('product_name') || !formData.get('rating') || formData.get('rating') < 1 || formData.get('rating') > 5) {
+      alert('Please fill in all required fields.');
+      return; 
+    }
+
+    console.log('Submitting review:', Object.fromEntries(formData));
+
+    try {
+      const res = await fetch('/submit_review', {
+        method: 'POST',
+        headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              product_name: formData.get('product_name'),
+              review_text: formData.get('review_text'),
+              rating: formData.get('rating')
+            })
+      });
+
+      const data = await res.json();
+      console.log("Server response:", data);
+
+      if (data.success) {
+        alert(data.message);
+      } else {
+        alert(data.message || "An unknown error occurred while submitting your review.");
+      }
+    } catch (error) {
+      console.error('Error submitting review:', error);
+      alert('An error occurred while submitting your review. Please try again later.');
+    }
+  });
+</script>
+</html>
