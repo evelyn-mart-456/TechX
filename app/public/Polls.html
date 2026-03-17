@@ -143,11 +143,11 @@ function showFatherResults(results){
 
 // Optional: Load results on page load
 async function loadResults(){
-    let res = await fetch("http://localhost:3000/voted?PollID=techBrand");
+    let res = await fetch("/voted?PollID=techBrand");
     let data = await res.json();
     if(data.results) showBrandResults(data.results);
 
-    res = await fetch("http://localhost:3000/voted?PollID=father");
+    res = await fetch("/voted?PollID=father");
     data = await res.json();
     if(data.results) showFatherResults(data.results);
 }
