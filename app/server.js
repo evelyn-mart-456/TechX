@@ -263,6 +263,8 @@ app.post('/votepoll', (req, res) => {
 
 app.get('/polls', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'polls.html'));
+});
+
 app.post('/staff-login', (req, res) => {
     const username = req.body.username;
     const hashedPassword = crypto.createHash('sha256').update(req.body.password).digest('hex');
