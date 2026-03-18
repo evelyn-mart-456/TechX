@@ -1,0 +1,1 @@
+DELETE FROM ProductCategory WHERE CategoryID = ?;

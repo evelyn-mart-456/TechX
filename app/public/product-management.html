@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="">
+  <head>
+    <meta charset="utf-8">
+    <title>Product Management</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <style>
+      .preview-img {
+        height: 80px;
+        width: auto;
+        max-width: 120px;
+        object-fit: contain;
+      }
+      .desc-textarea {
+        resize: vertical;
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="navbar navbar-expand-lg bg-body-tertiary">
+      <div class="container d-flex justify-content-center">
+        <a class="navbar-brand" href="/staff">Admin panel</a>
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+          <li class="nav-item">
+            <a class="nav-link" href="/staff">Staff</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link active" aria-current="page" href="/product-management">Product Management</a> 
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/staff-logout">Logout</a>
+          </li>
+        </ul>
+      </div>
+    </nav>
+    <main>
+      <div class="container mt-5">
+        <table class="table table-sm fs-6 text-nowrap">
+          <thead>
+            <tr class="table-dark">
+              <th>Category Name</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="categoryBody">
+
+          </tbody>
+        </table>
+        <p id="categoryError" class="text-danger"></p>
+        <div class="table-responsive">
+        <div class="container mt-5">
+          <table class="table table-sm fs-6 text-nowrap">
+            <thead>
+              <tr class="table-dark">
+                <th>Product Name</th>
+                <th>Description</th>
+                <th>Image</th>
+                <th>Featured</th>
+                <th>Link</th>
+                <th>Category</th>
+                <th>Retail Price</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="productBody">
+
+            </tbody>
+          </table>
+          <p id="productError" class="text-danger"></p>
+        </div>
+      </div>
+      </div>
+    </main>
+  </body>
+  <script>
+    /**
+     * Product Category functions
+     */
+    const catBody = document.getElementById("categoryBody");
+    const catError = document.getElementById("categoryError");
+    const prodError = document.getElementById("productError");
+    
+    function loadCategoryRow(category) {
+      const row = document.createElement("tr");
+
+      row.dataset.id = category.CategoryID;
+
+      row.innerHTML = `
+        <td><input name="name" type="text" placeholder="Category Name" value="${category.Name}" required /></td>
+        <td><input name="save" value="Update" type="submit" class="btn btn-success me-1" /><input name="delete" value="Delete" type="submit" class="btn btn-danger" /></td>
+      `;
+
+      return row;
+    }
+
+    async function saveCategoryRow(row) {
+      const formData = new FormData();
+      
+      const name = row.querySelector('[name="name"]').value;
+      const catID = row.dataset.id; 
+      
+      if(!name.trim()) {
+        catError.innerText = "You must supply a name.";
+        return false;
+      }
+
+      formData.append("name", name);
+
+      const res = await fetch(`/categories/${row.dataset.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name })
+      });
+
+      const data = await res.json();
+
+      if(data.error) {
+        catError.innerText = data.error;
+        return false;
+      }
+
+      catError.innerText = "";
+
+      return true;
+    }
+
+    async function deleteCategory(row) {
+      const res = await fetch(`/categories/${row.dataset.id}`, {
+        method: "DELETE"
+      });
+
+      const data = await res.json();
+
+      if(data.error) {
+        catError.innerText = data.error;
+        return false;
+      }
+
+      catError.innerText = "";
+      return true;
+    }
+
+    function loadCategories(categories) {
+      catBody.innerHTML = '';
+
+      categories.forEach(category => {
+        const row = loadCategoryRow(category);
+        catBody.append(row);
+      });
+
+      const row = document.createElement("tr");
+
+      row.innerHTML = `
+        <td><input name="name" type="text" placeholder="Category Name" required /></td>
+        <td><input name="create" value="Save" type="submit" class="btn btn-success" /></td>
+      `;
+
+      catBody.append(row);
+    }
+
+    catBody.addEventListener("click", async (event) => {
+        const button = event.target;
+
+        if(button.name === "save") {
+          const row = button.closest("tr");
+          const ok = await saveCategoryRow(row);
+          if(ok) await getProducts();
+        }
+
+        if(button.name === "create") {
+          const row = button.closest("tr");
+          const ok = await createCategory(row);
+          if(ok) await getProducts();
+        }
+
+        if(button.name === "delete") {
+          const row = button.closest("tr");
+          const ok = await deleteCategory(row);
+          if(ok) await getProducts();
+        }
+
+      });
+
+    async function createCategory(row) {
+      const name = row.querySelector('[name="name"]').value;
+      
+      if(!name.trim()) {
+        catError.innerText = "You must supply a name.";
+        return false;
+      }
+
+      await fetch('/categories', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name })
+      });
+
+      catError.innerText = "";
+
+      return true;
+    }
+
+
+    /** 
+     * Product Row functions
+    */
+    function loadProductRow(product, categoryList) {
+      const row = document.createElement("tr");
+      row.dataset.id = product.ProductID;
+
+      row.innerHTML = `
+        <td><input name="name" type="text" placeholder="Product Name" value="${product.ProductName}" required \></td>
+        <td><textarea name="desc" placeholder="Product Description" required>${product.ProductDesc}</textarea></td>
+        <td><img class="preview-img" src="product-images/${product.ProductImage}" /><input name="image" type="file" accept="image/*" \></td>
+        <td><input name="featured" type="checkbox" ${product.Featured ? "checked" : ""} \></td>
+        <td><input name="link" type="text" placeholder="Product Link" value="${product.ProductLink}" required \></td>
+        <td>
+          <select name="category">
+            ${categoryList}
+          </select>
+          </td>
+        <td>$<input name="price" value="${product.RetailPrice}"></td>
+        <td><input name="save" value="Update" type="submit" class="btn btn-success me-1" /><input name="delete" value="Delete" type="submit" class="btn btn-danger" /></td>
+      `;
+
+      return row;
+    }
+
+    async function createProductRow(row) {
+      const formData = new FormData();
+
+      const name = row.querySelector('[name="name"]').value;
+      const desc = row.querySelector('[name="desc"]').value;
+      const image = row.querySelector('[name="image"]').files[0];
+      const checked = row.querySelector('[name="featured"]').checked;
+      const link = row.querySelector('[name="link"]').value;
+      const catID = row.querySelector('[name="category"]').value;
+      const price = row.querySelector('[name="price"]').value;
+
+      if(!name.trim() || !desc.trim() || !link.trim() || !price.trim() || !image) {
+        prodError.innerText = "You must fill in all fields.";
+        return false;
+      }
+
+      if(!Number.isFinite(Number(price.trim()))) {
+        prodError.innerText = "The price must be a number.";
+        return false;
+      }
+
+      formData.append("name", name);
+      formData.append("desc", desc);
+      if(image)
+        formData.append("image", image);
+      else {
+        prodError.innerText = "You must supply an image";
+        return false;
+      }
+      formData.append("featured", checked);
+      formData.append("link", link);
+      formData.append("catID", catID);
+      formData.append("price", price);
+
+      const res = await fetch(`/products`, {
+        method: "POST",
+        body: formData
+      });
+
+      const data = await res.json();
+
+      if(data.error) {
+        prodError.innerText = data.error;
+        return false;
+      }
+
+      prodError.innerText = "";
+
+      return true;
+    }
+
+    async function deleteProductRow(row) {
+      const res = await fetch(`/products/${row.dataset.id}`, {
+        method: "DELETE"
+      });
+
+      const data = await res.json();
+
+      if(data.error) {
+        prodError.innerText = data.error;
+        return false;
+      }
+
+      prodError.innerText = "";
+
+      return true;
+    }
+
+    async function saveProductRow(row) {
+      const formData = new FormData();
+
+      const name = row.querySelector('[name="name"]').value;
+      const desc = row.querySelector('[name="desc"]').value;
+      const image = row.querySelector('[name="image"]').files[0];
+      const checked = row.querySelector('[name="featured"]').checked;
+      const link = row.querySelector('[name="link"]').value;
+      const catID = row.querySelector('[name="category"]').value;
+      const price = row.querySelector('[name="price"]').value;
+
+      if(!name.trim() || !desc.trim() || !link.trim() || !price.trim() || !catID) {
+        prodError.innerText = "You must fill in all fields.";
+        return false;
+      }
+
+      if(!Number.isFinite(Number(price.trim()))) {
+        prodError.innerText = "The price must be a number.";
+        return false;
+      }
+
+      formData.append("name", name);
+      formData.append("desc", desc);
+      if(image)
+        formData.append("image", image);
+      formData.append("featured", checked);
+      formData.append("link", link);
+      formData.append("catID", catID);
+      formData.append("price", price);
+
+      const res = await fetch(`/products/${row.dataset.id}`, {
+        method: "PATCH",
+        body: formData
+      });
+
+      const data = res.json();
+
+      if(data.error) {
+        prodError.innerText = data.error;
+        return false;
+      }
+
+      prodError.innerText = "";
+      return true;
+    }
+
+    const prodBody = document.getElementById("productBody");
+
+    prodBody.addEventListener("click", async (event) => {
+        const button = event.target;
+
+        if(button.name === "save") {
+          const row = button.closest("tr");
+          const ok = await saveProductRow(row);
+          if(ok) await getProducts();
+        }
+
+        if(button.name === "create") {
+          const row = button.closest("tr");
+          const ok = await createProductRow(row);
+          if(ok) await getProducts();
+        }
+
+        if(button.name === "delete") {
+          const row = button.closest("tr");
+          const ok = await deleteProductRow(row);
+          if(ok) await getProducts();
+        }
+
+      });
+
+    async function getProducts() {
+      const res = await fetch('/get-products');
+      const data = await res.json();
+
+      prodBody.innerHTML = "";
+
+      const categoryList = data.categories.map(category => `
+        <option value="${category.CategoryID}">
+          ${category.Name}
+        </option>
+      `).join("");
+
+      loadCategories(data.categories);
+
+      data.products.forEach(product => {
+        const row = loadProductRow(product, categoryList);
+
+        row.querySelector("select").value = product.CategoryID;
+
+        prodBody.appendChild(row);
+      });
+
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td><input name="name" type="text" placeholder="Product Name" required \></td>
+        <td><input name="desc" type="text" placeholder="Product Description" required \></td>
+        <td><img src="" height="80px" /><input name="image" type="file" accept="image/*" \></td>
+        <td><input name="featured" type="checkbox" \></td>
+        <td><input name="link" type="text" placeholder="Product Link" required \></td>
+        <td><select name="category">${categoryList}</select></td>
+        <td><input name="price" type="text" \></td>
+        <td><input name="create" value="Save" type="submit" class="btn btn-success" /></td>
+      `;
+
+      prodBody.appendChild(row);
+    }
+
+    getProducts();
+
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+</html>
