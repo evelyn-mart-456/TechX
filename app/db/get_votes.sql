@@ -1,4 +1,4 @@
-SELECT OptionID, COUNT(*) as VoteCount
-FROM PollVotes
-WHERE PollID = ?
-GROUP BY OptionID;
+SELECT OptionName, Votes
+FROM polloptions
+WHERE PollID = ?;
+

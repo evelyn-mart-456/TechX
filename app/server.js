@@ -174,7 +174,7 @@ app.post('/login', (req, res) => {
 
         if(results.length > 0) {
             if(results[0].Password_Hash === hashedPassword && results[0].Username === username) {
-                req.session.userId = results[0].UserID
+                req.session.userId = results[0].UserID;
                 req.session.username = results[0].Username;
                 res.json( {success: true} );
             }
@@ -189,31 +189,35 @@ app.post('/login', (req, res) => {
 app.get('/voted', (req, res) => {
     const poll = req.query.PollID;
 
-    if(req.session.userId) {
-        db.query(get_user_voted_sql, [req.session.userId, poll], (err, results) => {
-            if(err) {
-                console.error(err);
-                return res.status(500).json({error: 'Server error'});
-            }
-            if(results.length > 0) {
-                db.query(get_votes_sql, [poll], (err, results) => {
-                    if(err) {
-                        console.error(err);
-                        return res.status(500).send('Server error');
-                    }
+    db.query(get_votes_sql, [poll], (err, results) => {
+        if (err) {
+            console.error("VOTED ROUTE ERROR (get_votes_sql):", err);
+            return res.status(500).send("Server error");
+        }
 
-                    res.json({
-                        voted: true,
-                        results: results
-                    });
+        let userVoted = false;
+
+        if (req.session.userId) {
+            db.query(get_user_voted_sql, [req.session.userId, poll], (err, votedRows) => {
+                if (err) {
+                    console.error("VOTED ROUTE ERROR (get_user_voted_sql):", err);
+                    return res.status(500).send("Server error");
+                }
+
+                if (votedRows.length > 0) userVoted = true;
+
+                res.json({
+                    voted: userVoted,
+                    results: results
                 });
-            } else {
-                return res.json({voted: false});
-            }
-        });
-    } else {
-        res.json({voted: false});
-    }
+            });
+        } else {
+            res.json({
+                voted: false,
+                results: results
+            });
+        }
+    });
 });
 
 app.post('/votepoll', (req, res) => {
@@ -257,6 +261,8 @@ app.post('/votepoll', (req, res) => {
     }
 });
 
+app.get('/polls', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'polls.html'));
 app.post('/staff-login', (req, res) => {
     const username = req.body.username;
     const hashedPassword = crypto.createHash('sha256').update(req.body.password).digest('hex');
@@ -577,3 +583,4 @@ app.post('/submit_review', (req, res) => {
 app.listen(port, () => {
     console.log(`Express server running at http://localhost:${port}/`);
 });
+
