@@ -1,0 +1,17 @@
+1) Adding a link to a different page that would add more polls for people to debate on. This solves how the webpage is structured because right now we have the one poll under the about page.
+
+2) First I would create another link to a page then add more information and add both polls the previous poll question and a new question. 
+
+3) Fronted changes: adding a new section/page 
+Backend routes - creating and getting all the polls
+Database changes - regular polling, and changes the users get. 
+Home and about page will be changed, and adding a new page in general
+
+4) Get polls creating polls and getting responses from polls.
+
+5) Queries tables for users, polls, getting responses, etc.
+
+6) Having a clean new section for the polls where everyone can access it. 
+Having correct data on it and people can submit their form on it.
+Havign access to the infromation on there and being able to see it from the backend. 
+

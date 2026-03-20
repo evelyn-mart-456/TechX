@@ -31,6 +31,8 @@ const get_categories_sql = fs.readFileSync('./db/get_product_categories.sql', 'u
 const create_product_category_sql = fs.readFileSync('./db/create_product_category.sql', 'utf8');
 const update_product_category_sql = fs.readFileSync('./db/update_product_category.sql', "utf8");
 const delete_product_category_sql = fs.readFileSync('./db/delete_product_category.sql', 'utf8');
+const create_review_sql = fs.readFileSync('./db/create_review.sql', 'utf8');
+const get_reviews_sql = fs.readFileSync('./db/get_reviews.sql', 'utf8');
 
 const app = express();
 const port = 3000;
@@ -46,6 +48,7 @@ const uploadProductImg = multer({ storage: productStorage });
 
 app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: false}));
+app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(session({
     secret: 'change-this-later',
@@ -83,6 +86,9 @@ app.get('/register', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'register.html'));
 });
 
+app.get('/new-tech', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'new-tech.html'));
+});
 app.get('/tech', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'tech.html'));
 });
@@ -110,7 +116,220 @@ app.get('/staff', (req, res) => {
 app.get('/product/:id', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'product.html'));
 });
+app.get('/Review', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'Review.html'));
+});
 
+app.get('/Reviews', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'Reviews.html'));
+});
+//gets the reviews from the database and sends them to the frontend
+app.get('/api/Reviews', (req, res) => {
+    db.query(get_reviews_sql, (err, results) => {
+        if (err) {
+            console.error(err);
+            return res.status(500).json({ success: false, message: err.message });
+        }   
+        res.json({ success: true, reviews: results });
+    });
+});
+
+
+app.post('/register', (req, res) => {
+    const username = req.body.username;
+    const hashedPassword = crypto.createHash('sha256').update(req.body.password).digest('hex');
+    const email = req.body.email;
+
+    db.query(get_user_sql, [username], (err, results) => {
+        if(err) {
+            console.error('Database error:', err);
+        }
+
+        if(results.length > 0) {
+            res.json({error: "Error: username is taken."});
+        } else {
+            db.query(register_sql, [crypto.randomUUID(), email, username, hashedPassword], (err, results) => {
+                if(err) {
+                    console.error('Database error:', err);
+                    return res.status(500).send('Server error');
+                }
+                if(results.affectedRows === 0)
+                    return res.json({error: 'Username already taken'});
+
+                res.json({success: true});
+            });
+        }
+    });
+});
+
+app.post('/login', (req, res) => {
+    const username = req.body.username;
+    const hashedPassword = crypto.createHash('sha256').update(req.body.password).digest('hex');
+
+    db.query(get_user_sql, [username, hashedPassword], (err, results) => {
+        if(err) {
+            console.error(err);
+            return res.status(500).send('Server error');
+        }
+
+        if(results.length > 0) {
+            if(results[0].Password_Hash === hashedPassword && results[0].Username === username) {
+                req.session.userId = results[0].UserID;
+                req.session.username = results[0].Username;
+                res.json( {success: true} );
+            }
+            else
+                res.json( {error: 'Invalid password.'} );
+        } else {
+            res.json( {error: 'Invalid username.'} );
+        }
+    });
+});
+
+app.get('/voted', (req, res) => {
+    const poll = req.query.PollID;
+
+    db.query(get_votes_sql, [poll], (err, results) => {
+        if (err) {
+            console.error("VOTED ROUTE ERROR (get_votes_sql):", err);
+            return res.status(500).send("Server error");
+        }
+
+        let userVoted = false;
+
+        if (req.session.userId) {
+            db.query(get_user_voted_sql, [req.session.userId, poll], (err, votedRows) => {
+                if (err) {
+                    console.error("VOTED ROUTE ERROR (get_user_voted_sql):", err);
+                    return res.status(500).send("Server error");
+                }
+
+                if (votedRows.length > 0) userVoted = true;
+
+                res.json({
+                    voted: userVoted,
+                    results: results
+                });
+            });
+        } else {
+            res.json({
+                voted: false,
+                results: results
+            });
+        }
+    });
+});
+
+app.post('/votepoll', (req, res) => {
+    const poll = req.body.PollID;
+    const option = req.body.OptionID;
+
+    if(req.session.userId) {
+        db.query(create_vote_sql, [poll, option, req.session.userId], (err, results) => {
+            if(err) {
+                if(err.code === 'ER_DUP_ENTRY') {
+                    db.query(get_votes_sql, [poll], (err, results) => {
+                        if(err) {
+                            console.error(err);
+                            return res.status(500).send('Server error');
+                        }
+
+                        return res.json({
+                            results: results,
+                            message: "You already voted."
+                        });
+                    });
+                } else {
+                    console.error(err);
+                    return res.status(500).send('Server error');
+                }
+            }
+
+            db.query(get_votes_sql, [poll], (err, results) => {
+                if(err) {
+                    console.error(err);
+                    return res.status(500).send('Server error');
+                }
+
+                res.json({
+                    results: results
+                });
+            });
+        });
+    } else {
+        res.json( {error: "You must be logged in to vote."} );
+    }
+});
+
+app.get('/polls', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'polls.html'));
+});
+
+app.post('/staff-login', (req, res) => {
+    const username = req.body.username;
+    const hashedPassword = crypto.createHash('sha256').update(req.body.password).digest('hex');
+
+    db.query(get_staff_sql, [username, hashedPassword], (err, results) => {
+        if(err) {
+            console.error(err);
+            return res.status(500).send('Server error');
+        }
+
+        if(results.length > 0) {
+            if(results[0].Password_Hash === hashedPassword && results[0].Username === username) {
+                if(results[0].Activated) {
+                    req.session.staffId = results[0].StaffID;
+                    req.session.staffUsername = results[0].Username;
+                    res.redirect('/staff');
+                }
+                else
+                    res.json( {error: "Your staff acount has not been activated."});
+            }
+            else
+                res.json( {error: 'Invalid password.'} );
+        } else {
+            res.json( {error: 'Invalid username.'} );
+        }
+    });
+});
+
+app.get('/staff-logout', (req, res) => {
+    delete req.session.staffId;
+    delete req.session.staffUsername;
+    
+    res.redirect('/staff-login');
+});
+
+app.post('/staff-register', (req, res) => {
+    const username = req.body.username;
+
+    if(!req.body.password)
+        return res.json({error: 'You must enter a password.'});
+
+    const hashedPassword = crypto.createHash('sha256').update(req.body.password).digest('hex');
+    const email = req.body.email;
+
+    db.query(get_staff_sql, [username], (err, results) => {
+        if(err) {
+            console.error('Database error:', err);
+        }
+
+        if(results.length > 0) {
+            res.json({error: "Error: username is taken."});
+        } else {
+            db.query(create_staff_sql, [email, username, hashedPassword], (err, results) => {
+                if(err) {
+                    console.error('Database error:', err);
+                    return res.status(500).send('Server error');
+                }
+                if(results.affectedRows === 0)
+                    return res.json({error: 'Username already taken'});
+
+                res.json({success: true});
+            });
+        }
+    });
+});
 function requireStaff(req, res, next) {
   if (!req.session.staffId) {
     return res.sendStatus(403);
@@ -326,6 +545,7 @@ app.delete('/products/:id', requireStaff, (req, res) => {
     }
 });
 
+<<<<<<< HEAD
 app.post('/register', (req, res) => {
     const username = req.body.username;
     const hashedPassword = crypto.createHash('sha256').update(req.body.password).digest('hex');
@@ -514,6 +734,8 @@ app.post('/staff-register', (req, res) => {
     });
 });
 
+=======
+>>>>>>> origin/main
 app.post('/staff-activate', requireStaff, (req, res) => {
     if(req.session.staffId) {
         if(req.body.staffId != req.session.staffId) {
@@ -532,6 +754,26 @@ app.post('/staff-activate', requireStaff, (req, res) => {
     }
 });
 
+app.post('/submit_review', (req, res) => {
+    const reviewID = crypto.randomUUID();
+    const prod = req.body.product_name;
+    const rating = req.body.rating;
+    const review = req.body.review_text;
+
+    if (!req.session.userId) {
+        return res.status(401).json({ success: false, message: 'Log in to submit review' });
+    }
+
+    db.query(create_review_sql, [reviewID, prod, review, rating, req.session.userId], (err, result) => {
+        if (err) {
+            console.error(err);
+            return res.status(500).json({ success: false, message: err.message });
+        }
+        res.json({ success: true, message: "Review submitted successfully" });
+    });
+});
+
 app.listen(port, () => {
     console.log(`Express server running at http://localhost:${port}/`);
 });
+

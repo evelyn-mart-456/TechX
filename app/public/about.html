@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
 .topnav-right {
   float: right;'
@@ -54,102 +53,34 @@ body{
 </style>
 </head>
 <body>
-  <div class = "navbar">
-      <img src= "/Techx.png" width ="150" height ="100">  
-      <div class="topnav-right">
-        <a style = "padding-right: 20px; padding-left: 20px; padding: 10px 25px 10px 25px; color: Black;" href  = "/home">Home</a>
-        <a style = "padding-right: 20px; padding: 10px 25px 10px 25px; color: Black;" href = "/about"> About </a>
-        <a style = "padding-right: 20px; padding: 10px 25px 10px 25px; color: Black;" href = "/tech"> Tech </a>
-        <a class ="signup-bnt" href ="signup.html"> Sign Up</a>
-      </div>
-    </div>
-  <div class="poll-container">
+<div class = "navbar">
+
+<Img src= "Techx.png" width ="150" height ="100">
+<div class="topnav-right">
+<a style = "padding-right: 20px; padding-left: 20px; padding: 10px 25px 10px 25px; color: white;" href = "home.html">Home</a>
+<a style = "padding-right: 20px; padding: 10px 25px 10px 25px; color: white;" href = "about.html">About</a> 
+</div> 
+</div>
+<div class="poll-container">
   <h2>Tech Poll of the Week</h2>
 
-  <form action="/votepoll" id="pollForm" method="post">
-    <input type="hidden" id="pollFormID" name="PollID" value="DP02">
+  <form>
     <p>Which tech innovation excites you the most?</p>
 
     <label>
-      <input type="radio" name="OptionID" value="DO03"> Artificial Intelligence <span data-option-id="DO03"></span>
+      <input type="radio" name="tech"> Artificial Intelligence
     </label><br>
 
     <label>
-      <input type="radio" name="OptionID" value="DO04"> Virtual Reality <span data-option-id="DO04"></span>
+      <input type="radio" name="tech"> Virtual Reality
     </label><br>
 
     <label>
-      <input type="radio" name="OptionID" value="DO05"> Electric Vehicles <span data-option-id="DO05"></span>
+      <input type="radio" name="tech"> Electric Vehicles
     </label><br>
 
-    <button type="submit" id="submit">Vote</button>
+    <button type="submit">Vote</button>
   </form>
-  <p id="pollError"></p>
 </div>
-<script>
-  const pollForm = document.getElementById('pollForm');
-  const pollError = document.getElementById('pollError');
-  const options = document.querySelectorAll('input[name="OptionID"]');
-  const submit = document.getElementById('submit');
-
-  async function checkVote() {
-    const pollID = document.getElementById('pollFormID').value;
-    const res = await fetch('/voted?PollID='+encodeURIComponent(pollID));
-    const data = await res.json();
-
-    if(data.voted) {
-      options.forEach(option => {
-        option.disabled = true;
-      });
-      submit.disabled = true;
-      submit.hidden = true;
-
-      data.results.forEach(row => {
-        const span = document.querySelector(
-          `span[data-option-id="${row.OptionID}"]`
-        );
-
-        if(span) {
-          span.textContent = `(${row.VoteCount} votes)`;
-          }
-      });
-    }
-  }
-
-  checkVote();
-
-  pollForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-
-    const formData = new FormData(pollForm);
-    const res = await fetch('/votepoll', {
-      method: 'POST',
-      body: new URLSearchParams(formData)
-    });
-
-    const data = await res.json();
-
-    if(data.results) {
-      options.forEach(option => {
-        option.disabled = true;
-      });
-      submit.disabled = true;
-      submit.hidden = true;
-
-      data.results.forEach(row => {
-        const span = document.querySelector(
-          `span[data-option-id="${row.OptionID}"]`
-        );
-
-        if(span) {
-          span.textContent = `(${row.VoteCount} votes)`;
-          }
-      });
-    }
-
-    if(data.message)
-      pollError.textContent = data.message;
-  });
-</script>
 </body>
 </html>
