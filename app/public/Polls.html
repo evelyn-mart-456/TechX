@@ -27,7 +27,7 @@
 </style>
 </head>
 <body>
-<div class="techx-navbar">
+  <div class="techx-navbar">
       <img src="/Techx.png" width="150" height="100" alt="TechX logo">
 
       <div class="techx-nav-right">
@@ -35,14 +35,16 @@
         <a class="techx-nav-link" href="Polls.html">Polls</a>
         <a class="techx-nav-link" href="/tech">Tech</a>
         <a class="techx-nav-link" href="/Review">Leave a review</a>
+        <span></span>
+        <div id="loginFormContainer" class="auth">
+          <form id="loginForm" class="techx-nav-form">
+            <input type="text" placeholder="username" name="username" required>
+            <input type="password" placeholder="password" name="password" required>
+            <input type="submit" value="Login">
+          </form>
 
-        <form class="techx-nav-form">
-          <input type="text">
-          <input type="password">
-          <input type="submit" value="Submit">
-        </form>
-
-        <a class="techx-signup-btn" href="signup.html">Sign Up</a>
+          <a class="techx-signup-btn" href="signup.html">Sign Up</a>
+        </div>
       </div>
     </div>
 <div class= "container">
@@ -80,6 +82,7 @@
   <div id="fatherResults"></div>
 </div>
  </div>
+ <script src="/js/login-form.js" defer></script>
 <script>
 
 async function voteBrand(event){

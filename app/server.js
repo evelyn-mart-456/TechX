@@ -33,6 +33,7 @@ const update_product_category_sql = fs.readFileSync('./db/update_product_categor
 const delete_product_category_sql = fs.readFileSync('./db/delete_product_category.sql', 'utf8');
 const create_review_sql = fs.readFileSync('./db/create_review.sql', 'utf8');
 const get_reviews_sql = fs.readFileSync('./db/get_reviews.sql', 'utf8');
+const get_reviews_by_product_sql = fs.readFileSync('./db/get_reviews_by_product.sql', 'utf8');
 
 const app = express();
 const port = 3000;
@@ -48,7 +49,6 @@ const uploadProductImg = multer({ storage: productStorage });
 
 app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: false}));
-app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(session({
     secret: 'change-this-later',
@@ -123,6 +123,18 @@ app.get('/Review', (req, res) => {
 app.get('/Reviews', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'Reviews.html'));
 });
+
+app.get('/api/session', (req, res) => {
+    if(req.session.userId && req.session.username) {
+        return res.json({
+            loggedIn: true,
+            username: req.session.username
+        })
+    } else {
+        return res.json({loggedIn: false});
+    }
+});
+
 //gets the reviews from the database and sends them to the frontend
 app.get('/api/Reviews', (req, res) => {
     db.query(get_reviews_sql, (err, results) => {
@@ -131,6 +143,22 @@ app.get('/api/Reviews', (req, res) => {
             return res.status(500).json({ success: false, message: err.message });
         }   
         res.json({ success: true, reviews: results });
+    });
+});
+
+app.get('/api/Reviews/:id', (req, res) => {
+    const id = req.params.id;
+
+    console.log(id);
+
+    db.query(get_reviews_by_product_sql, [id], (err, results) => {
+        console.log("Here");
+        if(err) {
+            console.error('Database error:', err);
+            return res.status(500).json({ success: false, message: err.message });
+        }
+
+        return res.json({results: results});
     });
 });
 
@@ -184,6 +212,13 @@ app.post('/login', (req, res) => {
             res.json( {error: 'Invalid username.'} );
         }
     });
+});
+
+app.get('/logout', (req, res) => {
+    delete req.session.userId;
+    delete req.session.username;
+
+    res.json({loggedOut: true});
 });
 
 app.get('/voted', (req, res) => {
@@ -545,197 +580,6 @@ app.delete('/products/:id', requireStaff, (req, res) => {
     }
 });
 
-<<<<<<< HEAD
-app.post('/register', (req, res) => {
-    const username = req.body.username;
-    const hashedPassword = crypto.createHash('sha256').update(req.body.password).digest('hex');
-    const email = req.body.email;
-
-    db.query(get_user_sql, [username], (err, results) => {
-        if(err) {
-            console.error('Database error:', err);
-        }
-
-        if(results.length > 0) {
-            res.json({error: "Error: username is taken."});
-        } else {
-            db.query(register_sql, [crypto.randomUUID(), email, username, hashedPassword], (err, results) => {
-                if(err) {
-                    console.error('Database error:', err);
-                    return res.status(500).send('Server error');
-                }
-                if(results.affectedRows === 0)
-                    return res.json({error: 'Username already taken'});
-
-                res.json({success: true});
-            });
-        }
-    });
-});
-
-app.post('/login', (req, res) => {
-    const username = req.body.username;
-    const hashedPassword = crypto.createHash('sha256').update(req.body.password).digest('hex');
-
-    db.query(get_user_sql, [username, hashedPassword], (err, results) => {
-        if(err) {
-            console.error(err);
-            return res.status(500).send('Server error');
-        }
-
-        if(results.length > 0) {
-            if(results[0].Password_Hash === hashedPassword && results[0].Username === username) {
-                req.session.userId = results[0].UserID;
-                req.session.username = results[0].Username;
-                res.json( {success: true} );
-            }
-            else
-                res.json( {error: 'Invalid password.'} );
-        } else {
-            res.json( {error: 'Invalid username.'} );
-        }
-    });
-});
-
-app.get('/voted', (req, res) => {
-    const poll = req.query.PollID;
-
-    if(req.session.userId) {
-        db.query(get_user_voted_sql, [req.session.userId, poll], (err, results) => {
-            if(err) {
-                console.error(err);
-                return res.status(500).json({error: 'Server error'});
-            }
-            if(results.length > 0) {
-                db.query(get_votes_sql, [poll], (err, results) => {
-                    if(err) {
-                        console.error(err);
-                        return res.status(500).send('Server error');
-                    }
-
-                    res.json({
-                        voted: true,
-                        results: results
-                    });
-                });
-            } else {
-                return res.json({voted: false});
-            }
-        });
-    } else {
-        res.json({voted: false});
-    }
-});
-
-app.post('/votepoll', (req, res) => {
-    const poll = req.body.PollID;
-    const option = req.body.OptionID;
-
-    if(req.session.userId) {
-        db.query(create_vote_sql, [poll, option, req.session.userId], (err, results) => {
-            if(err) {
-                if(err.code === 'ER_DUP_ENTRY') {
-                    return db.query(get_votes_sql, [poll], (err, results) => {
-                        if(err) {
-                            console.error(err);
-                            return res.status(500).send('Server error');
-                        }
-
-                        return res.json({
-                            results: results,
-                            message: "You already voted."
-                        });
-                    });
-                } else {
-                    console.error(err);
-                    return res.status(500).send('Server error');
-                }
-            }
-
-            return db.query(get_votes_sql, [poll], (err, results) => {
-                if(err) {
-                    console.error(err);
-                    return res.status(500).send('Server error');
-                }
-
-                res.json({
-                    results: results
-                });
-            });
-        });
-    } else {
-        res.json( {error: "You must be logged in to vote."} );
-    }
-});
-
-app.post('/staff-login', (req, res) => {
-    const username = req.body.username;
-    const hashedPassword = crypto.createHash('sha256').update(req.body.password).digest('hex');
-
-    db.query(get_staff_sql, [username, hashedPassword], (err, results) => {
-        if(err) {
-            console.error(err);
-            return res.status(500).send('Server error');
-        }
-
-        if(results.length > 0) {
-            if(results[0].Password_Hash === hashedPassword && results[0].Username === username) {
-                if(results[0].Activated) {
-                    req.session.staffId = results[0].StaffID;
-                    req.session.staffUsername = results[0].Username;
-                    res.redirect('/staff');
-                }
-                else
-                    res.json( {error: "Your staff acount has not been activated."});
-            }
-            else
-                res.json( {error: 'Invalid password.'} );
-        } else {
-            res.json( {error: 'Invalid username.'} );
-        }
-    });
-});
-
-app.get('/staff-logout', (req, res) => {
-    delete req.session.staffId;
-    delete req.session.staffUsername;
-    
-    res.redirect('/staff-login');
-});
-
-app.post('/staff-register', (req, res) => {
-    const username = req.body.username;
-
-    if(!req.body.password)
-        return res.json({error: 'You must enter a password.'});
-
-    const hashedPassword = crypto.createHash('sha256').update(req.body.password).digest('hex');
-    const email = req.body.email;
-
-    db.query(get_staff_sql, [username], (err, results) => {
-        if(err) {
-            console.error('Database error:', err);
-        }
-
-        if(results.length > 0) {
-            res.json({error: "Error: username is taken."});
-        } else {
-            db.query(create_staff_sql, [email, username, hashedPassword], (err, results) => {
-                if(err) {
-                    console.error('Database error:', err);
-                    return res.status(500).send('Server error');
-                }
-                if(results.affectedRows === 0)
-                    return res.json({error: 'Username already taken'});
-
-                res.json({success: true});
-            });
-        }
-    });
-});
-
-=======
->>>>>>> origin/main
 app.post('/staff-activate', requireStaff, (req, res) => {
     if(req.session.staffId) {
         if(req.body.staffId != req.session.staffId) {

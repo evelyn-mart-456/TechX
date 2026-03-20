@@ -14,20 +14,23 @@
         <a class="techx-nav-link" href="Polls.html">Polls</a>
         <a class="techx-nav-link" href="/tech">Tech</a>
         <a class="techx-nav-link" href="/Review">Leave a review</a>
+        <span></span>
+        <div id="loginFormContainer" class="auth">
+          <form id="loginForm" class="techx-nav-form">
+            <input type="text" placeholder="username" name="username" required>
+            <input type="password" placeholder="password" name="password" required>
+            <input type="submit" value="Login">
+          </form>
 
-        <form class="techx-nav-form">
-          <input type="text">
-          <input type="password">
-          <input type="submit" value="Submit">
-        </form>
-
-        <a class="techx-signup-btn" href="signup.html">Sign Up</a>
+          <a class="techx-signup-btn" href="signup.html">Sign Up</a>
+        </div>
       </div>
     </div>
     <div id="featured-tech" class="container"></div>
     <div class = "content-container"> 
       <p>Our webpage helps serve the community with giving more information on new and improved tech.<br> This websites serves as a foundation on how tech can be improved and changed for good.</p>
     </div>
+    <script src="/js/login-form.js" defer></script>
     <script src="/js/featured-products.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
   </body>
