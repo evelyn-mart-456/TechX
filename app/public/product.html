@@ -3,49 +3,27 @@
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
-<style>
-body{
-  margin: 0;
-  font-family: Arial, sans-serif;
-  background: linear-gradient(to right, #19d7f8, #fd00da);
-
-} 
-.topnav-right {
-float: right;
-border: 2px solid  transparent; 
-border-radius: 20px;
-background-image: linear-gradient(#AFDBF5, #AFDBF5), radial-gradient(circle at top left, #fd00da, #19d7f8);
-background-origin: border-box; 
-background-clip: content-box, border-box;
-}
-.signup-bnt {
-top: 40px; 
-right: 80px;  
-text-decoration: none; 
-color: Black; 
-border: 2px solid  transparent; 
-border-radius: 20px; 
-background-image: linear-gradient(#AFDBF5, #AFDBF5), radial-gradient(circle at top left, #fd00da, #19d7f8);
-background-origin: border-box; 
-background-clip: content-box, border-box;  
-}
-.navbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 20px 40px;
-}
-</style>
+    <link href="css/style.css" rel="stylesheet">
+    
 </head>
 <body class="d-flex flex-column min-vh-100">
-    <div class = "navbar">
-        <img src= "/Techx.png" width ="150" height ="100">  
-        <div class="topnav-right">
-            <a style = "padding-right: 20px; padding-left: 20px; padding: 10px 25px 10px 25px; color: Black;" href  = "/home">Home</a>
-            <a style = "padding-right: 20px; padding: 10px 25px 10px 25px; color: Black;" href = "/about"> About </a>
-            <a style = "padding-right: 20px; padding: 10px 25px 10px 25px; color: Black;" href = "/tech"> Tech</a>
-            <a class ="signup-bnt" href ="signup.html"> Sign Up</a>
-        </div>
+    <div class="techx-navbar">
+      <img src="/Techx.png" width="150" height="100" alt="TechX logo">
+
+      <div class="techx-nav-right">
+        <a class="techx-nav-link" href="/home">Home</a>
+        <a class="techx-nav-link" href="Polls.html">Polls</a>
+        <a class="techx-nav-link" href="/tech">Tech</a>
+        <a class="techx-nav-link" href="/Review">Leave a review</a>
+
+        <form class="techx-nav-form">
+          <input type="text">
+          <input type="password">
+          <input type="submit" value="Submit">
+        </form>
+
+        <a class="techx-signup-btn" href="signup.html">Sign Up</a>
+      </div>
     </div> 
 
     <div class="container bg-light flex-grow-1 mb-4">
@@ -66,10 +44,49 @@ background-clip: content-box, border-box;
                 <p id="productDesc" class="text-muted"></p>
             </div>
         </div>
+        <div class="row">
+            <div class="col mt-4">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>
+                                Review
+                            </th>
+                            <th>
+                                Rating
+                            </th>
+                            <th>
+                                User
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody id="productReviews"></tbody>
+                </table>
+            </div>
+        </div>
     </div>
     <script>
         const id = window.location.pathname.split('/').pop();
         
+        async function loadReviews(id) {
+            const res = await fetch(`/api/Reviews/${id}`);
+            const data = await res.json();
+
+            const reviewTable = document.getElementById("productReviews");
+
+            data.results.forEach(review => {
+                const row = document.createElement("tr");
+
+                row.innerHTML = `
+                    <td>${review.ProductReview}</td>
+                    <td>${review.Rating}</td>
+                    <td>${review.UserName}</td>
+                `;
+
+                reviewTable.append(row);
+            });
+        }
+
         async function loadProduct() {
             const res = await fetch(`/products/${id}`);
             const data = await res.json();
@@ -84,6 +101,7 @@ background-clip: content-box, border-box;
             document.getElementById("retailPrice").innerText = `$${product.RetailPrice}`;
             document.getElementById("productLink").href = product.ProductLink;
 
+            loadReviews(product.ProductID);
         }
         loadProduct();
     </script>

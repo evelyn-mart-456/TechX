@@ -3,61 +3,27 @@
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
-<style>
-body{
-  margin: 0;
-  font-family: Arial, sans-serif;
-  background: linear-gradient(to right, #19d7f8, #fd00da);
-
-} 
-.topnav-right {
-display: flex;
-gap: 15px;
-border: 2px solid  transparent; 
-border-radius: 20px;
-background-image: linear-gradient(#AFDBF5, #AFDBF5), radial-gradient(circle at top left, #fd00da, #19d7f8);
-background-origin: border-box; 
-background-clip: content-box, border-box;
-}
-.signup-bnt {
-text-decoration: none; 
-color:  black; 
-border: 2px solid  transparent; 
-border-radius: 20px; 
-background-image: linear-gradient(#AFDBF5, #AFDBF5), radial-gradient(circle at top left, #fd00da, #19d7f8);
-background-origin: border-box; 
-background-clip: content-box, border-box; 
-padding: 10px 25px;
-background: linear-gradient(to right, #fd00da, #19d7f8);
-
-}
-
-.container {
- max-width: 900px;
- margin: 80px auto;
- padding: 20px; 
-text-align: center; 
-} 
-.navbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 20px 40px;
-}
-
-</style>
+  <link href="css/style.css" rel="stylesheet">
 </head>
   <body>
-    <div class = "navbar">
-      <img src= "/Techx.png" width ="150" height ="100">  
-      <div class="topnav-right">
-        <a style = "padding-right: 20px; padding-left: 20px; padding: 10px 25px 10px 25px; color: Black;" href  = "/home">Home</a>
-        <a style = "padding: 10px 25px 10px 25px; color: Black;" href = "Polls.html"> Polls</a>
-        <a style = "padding-right: 20px; padding: 10px 25px 10px 25px; color: Black;" href = "/tech"> Tech </a>
-        <a class ="padding-right padding: 10px 25px 10px 25px; color: Black;" href ="/Review"> Leave a review</a>
-<a class ="signup-bnt" href ="signup.html"> Sign Up</a>
+    <div class="techx-navbar">
+      <img src="/Techx.png" width="150" height="100" alt="TechX logo">
+
+      <div class="techx-nav-right">
+        <a class="techx-nav-link" href="/home">Home</a>
+        <a class="techx-nav-link" href="Polls.html">Polls</a>
+        <a class="techx-nav-link" href="/tech">Tech</a>
+        <a class="techx-nav-link" href="/Review">Leave a review</a>
+
+        <form class="techx-nav-form">
+          <input type="text">
+          <input type="password">
+          <input type="submit" value="Submit">
+        </form>
+
+        <a class="techx-signup-btn" href="signup.html">Sign Up</a>
       </div>
-    </div> 
+    </div>
     <div id="featured-tech" class="container"></div>
     <div class = "content-container"> 
       <p>Our webpage helps serve the community with giving more information on new and improved tech.<br> This websites serves as a foundation on how tech can be improved and changed for good.</p>
