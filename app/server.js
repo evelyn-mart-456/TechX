@@ -33,6 +33,7 @@ const update_product_category_sql = fs.readFileSync('./db/update_product_categor
 const delete_product_category_sql = fs.readFileSync('./db/delete_product_category.sql', 'utf8');
 const create_review_sql = fs.readFileSync('./db/create_review.sql', 'utf8');
 const get_reviews_sql = fs.readFileSync('./db/get_reviews.sql', 'utf8');
+const get_reviews_by_product_sql = fs.readFileSync('./db/get_reviews_by_product.sql', 'utf8');
 
 const app = express();
 const port = 3000;
@@ -48,7 +49,6 @@ const uploadProductImg = multer({ storage: productStorage });
 
 app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: false}));
-app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(session({
     secret: 'change-this-later',
@@ -123,6 +123,18 @@ app.get('/Review', (req, res) => {
 app.get('/Reviews', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'Reviews.html'));
 });
+
+app.get('/api/session', (req, res) => {
+    if(req.session.userId && req.session.username) {
+        return res.json({
+            loggedIn: true,
+            username: req.session.username
+        })
+    } else {
+        return res.json({loggedIn: false});
+    }
+});
+
 //gets the reviews from the database and sends them to the frontend
 app.get('/api/Reviews', (req, res) => {
     db.query(get_reviews_sql, (err, results) => {
@@ -131,6 +143,19 @@ app.get('/api/Reviews', (req, res) => {
             return res.status(500).json({ success: false, message: err.message });
         }   
         res.json({ success: true, reviews: results });
+    });
+});
+
+app.get('/api/Reviews/:id', (req, res) => {
+    const id = req.params.id;
+
+    db.query(get_reviews_by_product_sql, [id], (err, results) => {
+        if(err) {
+            console.error('Database error:', err);
+            return res.status(500).json({ success: false, message: err.message });
+        }
+
+        return res.json({results: results});
     });
 });
 
@@ -186,6 +211,13 @@ app.post('/login', (req, res) => {
     });
 });
 
+app.get('/logout', (req, res) => {
+    delete req.session.userId;
+    delete req.session.username;
+
+    res.json({loggedOut: true});
+});
+
 app.get('/voted', (req, res) => {
     const poll = req.query.PollID;
 
@@ -228,7 +260,7 @@ app.post('/votepoll', (req, res) => {
         db.query(create_vote_sql, [poll, option, req.session.userId], (err, results) => {
             if(err) {
                 if(err.code === 'ER_DUP_ENTRY') {
-                    db.query(get_votes_sql, [poll], (err, results) => {
+                    return db.query(get_votes_sql, [poll], (err, results) => {
                         if(err) {
                             console.error(err);
                             return res.status(500).send('Server error');
@@ -245,7 +277,7 @@ app.post('/votepoll', (req, res) => {
                 }
             }
 
-            db.query(get_votes_sql, [poll], (err, results) => {
+            return db.query(get_votes_sql, [poll], (err, results) => {
                 if(err) {
                     console.error(err);
                     return res.status(500).send('Server error');
@@ -565,7 +597,7 @@ app.post('/staff-activate', requireStaff, (req, res) => {
 
 app.post('/submit_review', (req, res) => {
     const reviewID = crypto.randomUUID();
-    const prod = req.body.product_name;
+    const prod = req.body.product_id;
     const rating = req.body.rating;
     const review = req.body.review_text;
 
