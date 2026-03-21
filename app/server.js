@@ -33,6 +33,7 @@ const update_product_category_sql = fs.readFileSync('./db/update_product_categor
 const delete_product_category_sql = fs.readFileSync('./db/delete_product_category.sql', 'utf8');
 const create_review_sql = fs.readFileSync('./db/create_review.sql', 'utf8');
 const get_reviews_sql = fs.readFileSync('./db/get_reviews.sql', 'utf8');
+const get_reviews_by_product_sql = fs.readFileSync('./db/get_reviews_by_product.sql', 'utf8');
 
 const app = express();
 const port = 3000;
@@ -130,6 +131,27 @@ app.get('/api/Reviews', (req, res) => {
             console.error(err);
             return res.status(500).json({ success: false, message: err.message });
         }   
+        res.json({ success: true, reviews: results });
+    });
+});
+//get product from database and send to frontend
+app.get('/api/Product/:id', (req, res) => {
+    const productId = req.params.id;
+    db.query(get_product_sql, [productId], (err, results) => {
+        if (err) {
+            console.error(err);
+            return res.status(500).json({ success: false, message: err.message });
+        }
+    });
+});
+//get the reviews for the product and send them to the frontend
+app.get('/api/Reviews/:product_name', (req, res) => {
+    const productName = req.params.product_name;
+    db.query(get_reviews_by_product_sql, [productName], (err, results) => {
+        if (err) {
+            console.error(err);
+            return res.status(500).json({ success: false, message: err.message });
+        }
         res.json({ success: true, reviews: results });
     });
 });
@@ -585,4 +607,4 @@ app.post('/submit_review', (req, res) => {
 app.listen(port, () => {
     console.log(`Express server running at http://localhost:${port}/`);
 });
-
+    });
