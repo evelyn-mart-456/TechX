@@ -149,10 +149,7 @@ app.get('/api/Reviews', (req, res) => {
 app.get('/api/Reviews/:id', (req, res) => {
     const id = req.params.id;
 
-    console.log(id);
-
     db.query(get_reviews_by_product_sql, [id], (err, results) => {
-        console.log("Here");
         if(err) {
             console.error('Database error:', err);
             return res.status(500).json({ success: false, message: err.message });
@@ -263,7 +260,7 @@ app.post('/votepoll', (req, res) => {
         db.query(create_vote_sql, [poll, option, req.session.userId], (err, results) => {
             if(err) {
                 if(err.code === 'ER_DUP_ENTRY') {
-                    db.query(get_votes_sql, [poll], (err, results) => {
+                    return db.query(get_votes_sql, [poll], (err, results) => {
                         if(err) {
                             console.error(err);
                             return res.status(500).send('Server error');
@@ -280,7 +277,7 @@ app.post('/votepoll', (req, res) => {
                 }
             }
 
-            db.query(get_votes_sql, [poll], (err, results) => {
+            return db.query(get_votes_sql, [poll], (err, results) => {
                 if(err) {
                     console.error(err);
                     return res.status(500).send('Server error');
@@ -600,7 +597,7 @@ app.post('/staff-activate', requireStaff, (req, res) => {
 
 app.post('/submit_review', (req, res) => {
     const reviewID = crypto.randomUUID();
-    const prod = req.body.product_name;
+    const prod = req.body.product_id;
     const rating = req.body.rating;
     const review = req.body.review_text;
 

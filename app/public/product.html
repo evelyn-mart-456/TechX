@@ -3,7 +3,7 @@
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
-    <link href="css/style.css" rel="stylesheet">
+    <link href="/css/style.css" rel="stylesheet">
     
 </head>
 <body class="d-flex flex-column min-vh-100">
@@ -62,8 +62,21 @@
                             </th>
                         </tr>
                     </thead>
-                    <tbody id="productReviews"></tbody>
+                    <tbody id="productReviews">
+                        <tr id="addReviewRow">
+                            <td>
+                                <textarea id="reviewTextarea" name="review" required></textarea>
+                            </td>
+                            <td>
+                                <input id="ratingInput" name="rating" type="number" placeholder="Rating (1-5)" min="1" max="5" required>
+                            </td>
+                            <td>
+                                <button id="submitReview">Submit Review</button>
+                            </td>
+                        </tr>
+                    </tbody>
                 </table>
+                <p id="submitError"></p>
             </div>
         </div>
     </div>
@@ -76,6 +89,8 @@
             const data = await res.json();
 
             const reviewTable = document.getElementById("productReviews");
+            const addReviewRow = document.getElementById("addReviewRow");
+
 
             data.results.forEach(review => {
                 const row = document.createElement("tr");
@@ -86,7 +101,7 @@
                     <td>${review.UserName}</td>
                 `;
 
-                reviewTable.append(row);
+                reviewTable.insertBefore(row, addReviewRow);
             });
         }
 
@@ -105,6 +120,34 @@
             document.getElementById("productLink").href = product.ProductLink;
 
             loadReviews(product.ProductID);
+
+            const submitReview = document.getElementById("submitReview");
+
+            submitReview.addEventListener("click", async (e) => {
+                e.preventDefault();
+
+                const submitError = document.getElementById("submitError");
+
+                const review = document.getElementById("reviewTextarea").value;
+                const rating = document.getElementById("ratingInput").value;
+
+                const formData = new FormData();
+                formData.append("review_text", review);
+                formData.append("rating", rating);
+                formData.append("product_id", id);
+
+                const res = await fetch('/submit_review', {
+                    method: 'POST',
+                    body: new URLSearchParams(formData)
+                });
+                
+                const data = await res.json();
+
+                if(!data.success)
+                    submitError.innerText = data.message;
+                else
+                    location.reload();
+            });
         }
         loadProduct();
     </script>
