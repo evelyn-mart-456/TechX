@@ -99,7 +99,7 @@
         const select = document.querySelector('select[name="product_name"]');
         data.products.forEach(product => {
           const option = document.createElement('option');
-          option.value = product.ProductName;
+          option.value = product.ProductID;
           option.textContent = product.ProductName;
           select.appendChild(option);
         });
@@ -126,7 +126,7 @@
         method: 'POST',
         headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              product_name: formData.get('product_name'),
+              product_id: formData.get('product_name'),
               review_text: formData.get('review_text'),
               rating: rating
             })
