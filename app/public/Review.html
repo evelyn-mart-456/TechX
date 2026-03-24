@@ -1,73 +1,77 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <link href="/css/style.css" rel="stylesheet">
 <style>
-body {
-  margin: 0;
-  font-family: Arial, sans-serif;
-  background: linear-gradient(to right, #19d7f8, #fd00da);
-}
-.topnav-right {
-float: right;
-border: 2px solid  transparent; 
-border-radius: 20px;
-background-image: linear-gradient(#AFDBF5, #AFDBF5), radial-gradient(circle at top left, #fd00da, #19d7f8);
-background-origin: border-box; 
-background-clip: content-box, border-box;
-}
-.center-wrapper {
- display: flex;
-  justify-content: center;
-  align-items: center;
-  height: calc(100vh - 120px); /* Adjust for navbar and padding */
-  padding: 20px;
-}
-.review-container {
-  background: white;
-  padding: 40px;
-  width: 350px;
-  border-radius: 15px;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-  text-align: center;
-}
-h2 {
-  margin-bottom: 20px;
-}
+  .center-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: calc(100vh - 120px);
+    padding: 20px;
+  }
 
-input {
-  width: 100%;
-  padding: 12px;
-  margin: 10px 0;
-  border-radius: 8px;
-  border: 1px solid #ccc;
-}
+  .review-container {
+    background: white;
+    padding: 40px;
+    width: 350px;
+    border-radius: 15px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    text-align: center;
+  }
 
-button {
-  width: 100%;
-  padding: 12px;
-  border: none;
-  border-radius: 8px;
-  background: #42455a;
-  color: white;
-  font-size: 16px;
-  cursor: pointer;
-  transition: 0.3s;
-}
-button:hover {
-  background: #2f3140;
-}
+  .review-container h2 {
+    margin-bottom: 20px;
+  }
+
+  .review-container input {
+    width: 100%;
+    padding: 12px;
+    margin: 10px 0;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    box-sizing: border-box;
+  }
+
+  .review-container button {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    background: #42455a;
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+    transition: 0.3s;
+  }
+
+  .review-container button:hover {
+    background: #2f3140;
+  }
 </style>
 </head>
 <body>
 
-  <div class = "navbar">
-<Img src= "Techx.png" width ="150" height ="100">  
-<div class="topnav-right">
-<a style = "padding-right: 20px; padding-left: 20px; padding: 10px 25px 10px 25px; color: Black;" href  = "/home">Home</a>
-<a style = "padding-right: 20px; padding: 10px 25px 10px 25px; color: Black;" href = "/login"> Login </a>
-<a class ="padding-right" href ="/Reviews"> See reviews</a>
-</div>
-</div> 
+  <div class="techx-navbar">
+      <img src="/Techx.png" width="150" height="100" alt="TechX logo">
+
+      <div class="techx-nav-right">
+        <a class="techx-nav-link" href="/home">Home</a>
+        <a class="techx-nav-link" href="Polls.html">Polls</a>
+        <a class="techx-nav-link" href="/tech">Tech</a>
+        <a class="techx-nav-link" href="/Review">Leave a review</a>
+        <span></span>
+        <div id="loginFormContainer" class="auth">
+          <form id="loginForm" class="techx-nav-form">
+            <input type="text" placeholder="username" name="username" required>
+            <input type="password" placeholder="password" name="password" required>
+            <input type="submit" value="Login">
+          </form>
+
+          <a class="techx-signup-btn" href="signup.html">Sign Up</a>
+        </div>
+      </div>
+    </div>
 
   <div class="center-wrapper">
     <div class="review-container">
@@ -82,6 +86,7 @@ button:hover {
   </div>
 </body>
 
+<script src="/js/login-form.js" defer></script>
 <script>
   const reviewForm = document.getElementById('reviewForm');
   reviewForm.addEventListener('submit', async function(event) {
