@@ -1,0 +1,3 @@
+SELECT ReviewID, ProductName, ProductReview, Rating, UserID
+FROM Reviews
+WHERE ProductName = ?;

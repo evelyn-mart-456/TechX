@@ -12,7 +12,7 @@
 
       <div class="techx-nav-right">
         <a class="techx-nav-link" href="/home">Home</a>
-        <a class="techx-nav-link" href="Polls.html">Polls</a>
+        <a class="techx-nav-link" href="/Polls.html">Polls</a>
         <a class="techx-nav-link" href="/tech">Tech</a>
         <a class="techx-nav-link" href="/Review">Leave a review</a>
         <span></span>
@@ -23,7 +23,7 @@
             <input type="submit" value="Login">
           </form>
 
-          <a class="techx-signup-btn" href="signup.html">Sign Up</a>
+          <a class="techx-signup-btn" href="/signup.html">Sign Up</a>
         </div>
       </div>
     </div>
@@ -92,7 +92,7 @@
             const addReviewRow = document.getElementById("addReviewRow");
 
 
-            data.results.forEach(review => {
+            data.reviews.forEach(review => {
                 const row = document.createElement("tr");
 
                 row.innerHTML = `
@@ -124,6 +124,11 @@
             const submitReview = document.getElementById("submitReview");
 
             submitReview.addEventListener("click", async (e) => {
+                const ratingInput =  document.getElementById("ratingInput").value;
+                if(ratingInput < 1 || ratingInput > 5) {
+                    alert("Rating must be between 1 and 5.");
+                    return;
+                }
                 e.preventDefault();
 
                 const submitError = document.getElementById("submitError");

@@ -1,2 +1,2 @@
-INSERT INTO Reviews (ReviewID, ProductID, ProductReview, Rating, UserId)
-VALUES (?, ?, ?, ?, ?);
+INSERT INTO Reviews (ReviewID, ProductID, ProductName, ProductReview, Rating, UserId)
+VALUES (?, ?, ?, ?, ?, ?);
