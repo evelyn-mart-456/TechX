@@ -34,6 +34,8 @@ const delete_product_category_sql = fs.readFileSync('./db/delete_product_categor
 const create_review_sql = fs.readFileSync('./db/create_review.sql', 'utf8');
 const get_reviews_sql = fs.readFileSync('./db/get_reviews.sql', 'utf8');
 const get_reviews_by_product_sql = fs.readFileSync('./db/get_reviews_by_product.sql', 'utf8');
+const get_reviews_by_user_sql = fs.readFileSync('./db/get_reviews_by_user.sql', 'utf8');
+const update_review_sql = fs.readFileSync('./db/update_review.sql', 'utf8');
 
 const app = express();
 const port = 3000;
@@ -124,6 +126,15 @@ app.get('/Reviews', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'Reviews.html'));
 });
 
+app.get('/my-reviews', (req, res) => {
+    if(req.session.userId) {
+        res.sendFile(path.join(__dirname, 'public', 'my-reviews.html'));
+    } else {
+        res.redirect('/login'); //redirect if not logged in
+    }
+});
+
+
 app.get('/api/session', (req, res) => {
     if(req.session.userId && req.session.username) {
         return res.json({
@@ -145,6 +156,38 @@ app.get('/api/Reviews', (req, res) => {
         res.json({ success: true, reviews: results });
     });
 });
+//get all products for dropdown
+app.get('/api/products', (req, res) => {
+    db.query(get_products_sql, (err, results) => {
+        if (err) {
+            console.error(err);
+            return res.status(500).json({ success: false, message: err.message });
+        }
+        res.json({ success: true, products: results });
+    });
+});
+//get reviews for a specific product and send them to the frontend
+//get product from database and send to frontend
+app.get('/api/Product/:id', (req, res) => {
+    const productId = req.params.id;
+    db.query(get_product_sql, [productId], (err, results) => {
+        if (err) {
+            console.error(err);
+            return res.status(500).json({ success: false, message: err.message });
+        }
+    });
+});
+//get the reviews for the product and send them to the frontend
+app.get('/api/Reviews/:Product_name', (req, res) => {
+    const productName = req.params.Product_name;
+    db.query(get_reviews_by_product_sql, [productName], (err, results) => {
+        if (err) {
+            console.error(err);
+            return res.status(500).json({ success: false, message: err.message });
+        }
+        res.json({ success: true, reviews: results });
+    });
+});
 
 app.get('/api/Reviews/:id', (req, res) => {
     const id = req.params.id;
@@ -159,6 +202,20 @@ app.get('/api/Reviews/:id', (req, res) => {
     });
 });
 
+//get reviews for a specific user and send them to the frontend
+app.get('/api/my-reviews', (req, res) => {
+    if(!req.session.userId) {
+        return res.status(401).json({ success: false, message: 'You must be logged in to view your reviews.' });
+    }
+
+    db.query(get_reviews_by_user_sql, [req.session.userId], (err, results) => {
+        if(err) {
+            console.error('Database error:', err);
+            return res.status(500).json({ success: false, message: err.message });
+        }
+        res.json({ success: true, reviews: results });
+    });
+});
 
 app.post('/register', (req, res) => {
     const username = req.body.username;
@@ -597,7 +654,8 @@ app.post('/staff-activate', requireStaff, (req, res) => {
 
 app.post('/submit_review', (req, res) => {
     const reviewID = crypto.randomUUID();
-    const prod = req.body.product_id;
+    const prodId = req.body.product_id;
+    const prodName = req.body.product_name;
     const rating = req.body.rating;
     const review = req.body.review_text;
 
@@ -605,16 +663,95 @@ app.post('/submit_review', (req, res) => {
         return res.status(401).json({ success: false, message: 'Log in to submit review' });
     }
 
-    db.query(create_review_sql, [reviewID, prod, review, rating, req.session.userId], (err, result) => {
-        if (err) {
-            console.error(err);
-            return res.status(500).json({ success: false, message: err.message });
+    if (prodId) {
+        // Fetch productName from product_id
+        db.query(get_product_sql, [prodId], (err, results) => {
+            if (err) {
+                console.error(err);
+                return res.status(500).json({ success: false, message: err.message });
+            }
+            if (results.length === 0) {
+                return res.status(404).json({ success: false, message: 'Product not found' });
+            }
+            const productName = results[0].ProductName;
+            db.query(create_review_sql, [reviewID, prodId, productName, review, rating, req.session.userId], (err, result) => {
+                if (err) {
+                    console.error(err);
+                    return res.status(500).json({ success: false, message: err.message });
+                }
+                res.json({ success: true, message: "Review submitted successfully" });
+            });
+        });
+    } else if (prodName) {
+        // Use product_name directly, but need to get product_id for insert
+        // Assuming product_name is unique, fetch product_id
+        db.query('SELECT ProductID FROM Product WHERE ProductName = ?', [prodName], (err, results) => {
+            if (err) {
+                console.error(err);
+                return res.status(500).json({ success: false, message: err.message });
+            }
+            if (results.length === 0) {
+                return res.status(404).json({ success: false, message: 'Product not found' });
+            }
+            const productId = results[0].ProductID;
+            db.query(create_review_sql, [reviewID, productId, prodName, review, rating, req.session.userId], (err, result) => {
+                if (err) {
+                    console.error(err);
+                    return res.status(500).json({ success: false, message: err.message });
+                }
+                res.json({ success: true, message: "Review submitted successfully" });
+            });
+        });
+    } else {
+        return res.status(400).json({ success: false, message: 'Product ID or name required' });
+    }
+});
+
+app.put('/api/update_review/:id', (req, res) => {
+if (!req.session.userId) {
+    return res.status(401).json({ success: false, message: 'Log in to update review' });
+}   
+const {review_text, rating} = req.body;
+const reviewId = req.params.id;
+//validate rating
+if(rating < 1 || rating > 5) {
+    return res.status(400).json({ success: false, message: 'invalid rating' });
+}
+db.query(update_review_sql, [review_text, rating, reviewId, req.session.userId], (err, result) => {
+    if (err) {
+        console.error(err);
+        return res.status(500).json({ success: false, message: err.message });
+    }
+    if(result.affectedRows === 0) {
+        return res.status(404).json({ success: false, message: 'Review not found or you do not own the review' });
+    }
+    res.json({ success: true, message: 'Review updated' });
+});
+});
+
+app.delete('/api/delete_review/:id', (req, res) => {
+    if (!req.session.userId) {
+        return res.status(401).json({ success: false, message: 'Log in to delete review' });
+    }
+
+    const reviewId = req.params.id;
+
+    db.query(
+        'DELETE FROM Reviews WHERE ReviewID = ? AND UserID = ?',
+        [reviewId, req.session.userId],
+        (err, result) => {
+            if (err) {
+                console.error(err);
+                return res.status(500).json({ success: false, message: err.message });
+            }
+            if (result.affectedRows === 0) {
+                return res.status(404).json({ success: false, message: 'Review not found or you do not own this review' });
+            }
+            res.json({ success: true, message: 'Review deleted successfully' });
         }
-        res.json({ success: true, message: "Review submitted successfully" });
-    });
+    );
 });
 
 app.listen(port, () => {
     console.log(`Express server running at http://localhost:${port}/`);
 });
-
