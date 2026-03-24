@@ -1,57 +1,52 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <link href="/css/style.css" rel="stylesheet">
 <style>
-.navbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 20px 40px;
-}
-body{
-  margin: 0;
-  font-family: Arial, sans-serif;
-  background: linear-gradient(to right, #19d7f8, #fd00da);
+  .poll {
+    width: 300px;
+    background: white;
+    padding: 20px;
+    border-radius: 15px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+  }
 
-} 
-.topnav-right {
-float: right;
-border: 2px solid  transparent; 
-border-radius: 20px;
-background-image: linear-gradient(#AFDBF5, #AFDBF5), radial-gradient(circle at top left, #fd00da, #19d7f8);
-background-origin: border-box; 
-background-clip: content-box, border-box;
-}
-.poll {
-  width: 300px;
-  background: white;
-  padding: 20px;
-  border-radius: 15px;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.1);
-}  
-.poll1{
- width: 300px;
-  background: white;
-  padding: 20px;
-  border-radius: 15px;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.1); 
-}
-.container {
-  display: flex;
-  justify-content: space-between;
-  padding: 40px;
-}
+  .poll1 {
+    width: 300px;
+    background: white;
+    padding: 20px;
+    border-radius: 15px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+  }
 
-</style> 
+  .container {
+    display: flex;
+    justify-content: space-between;
+    padding: 40px;
+  }
+</style>
 </head>
 <body>
-<div class = "navbar">
-<Img src= "Techx.png" width ="150" height ="100">
-<div class="topnav-right">
-<a style = "padding-right: 20px; padding-left: 20px; padding: 10px 25px 10px 25px; color: black;" href = "home.html">Home</a>
-<a style = "padding-right: 20px; padding: 10px 25px 10px 25px; color: black;" href = "about.html">About</a> 
-</div> 
-</div>
+  <div class="techx-navbar">
+      <img src="/Techx.png" width="150" height="100" alt="TechX logo">
+
+      <div class="techx-nav-right">
+        <a class="techx-nav-link" href="/home">Home</a>
+        <a class="techx-nav-link" href="/Polls.html">Polls</a>
+        <a class="techx-nav-link" href="/tech">Tech</a>
+        <a class="techx-nav-link" href="/Review">Leave a review</a>
+        <span></span>
+        <div id="loginFormContainer" class="auth">
+          <form id="loginForm" class="techx-nav-form">
+            <input type="text" placeholder="username" name="username" required>
+            <input type="password" placeholder="password" name="password" required>
+            <input type="submit" value="Login">
+          </form>
+
+          <a class="techx-signup-btn" href="/signup.html">Sign Up</a>
+        </div>
+      </div>
+    </div>
 <div class= "container">
 <div class="poll"> 
   <h3>Which tech brand do you prefer?</h3>
@@ -87,6 +82,7 @@ background-clip: content-box, border-box;
   <div id="fatherResults"></div>
 </div>
  </div>
+ <script src="/js/login-form.js" defer></script>
 <script>
 
 async function voteBrand(event){

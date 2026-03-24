@@ -1,0 +1,307 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Reviews</title>
+  <link href="/css/style.css" rel="stylesheet">
+  <style>
+    .center-wrapper {
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    .status {
+      margin-bottom: 1rem;
+      padding: 0.8rem;
+      border-radius: 6px;
+      background: #f4f4f4;
+      font-weight: 600;
+      color: #333;
+    }
+
+    .reviews-list {
+      display: grid;
+      gap: 1rem;
+    }
+
+    .review-card {
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      padding: 1rem;
+      background: #fff;
+    }
+
+    .review-card h3 {
+      margin: 0 0 0.5rem;
+      font-size: 1.1rem;
+    }
+
+    .review-card p {
+      margin: 0 0 0.5rem;
+    }
+
+    .review-card .actions {
+      margin-top: 0.8rem;
+      display: flex;
+      gap: 0.6rem;
+    }
+
+    .edit-panel {
+      margin-top: 1.3rem;
+      padding: 1rem;
+      background: #fff;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      display: none;
+    }
+
+    .edit-panel input,
+    .edit-panel textarea {
+      width: 100%;
+      margin-top: 0.4rem;
+      margin-bottom: 0.6rem;
+      padding: 0.6rem;
+      border-radius: 6px;
+      border: 1px solid #bbb;
+    }
+
+    .edit-panel button {
+      margin-right: 0.6rem;
+    }
+
+    .danger {
+      color: #a33;
+    }
+
+    .success {
+      color: #080;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="techx-navbar">
+    <img src="/Techx.png" width="150" height="100" alt="TechX logo">
+    <div class="techx-nav-right">
+      <a class="techx-nav-link" href="/home">Home</a>
+      <a class="techx-nav-link" href="/Polls.html">Polls</a>
+      <a class="techx-nav-link" href="/tech">Tech</a>
+      <a class="techx-nav-link" href="/Review">Leave a review</a>
+      <a class="techx-nav-link" href="/my-reviews">My reviews</a>
+    </div>
+  </div>
+
+  <div class="center-wrapper">
+    <div id="status" class="status">Loading your reviews...</div>
+
+    <div id="reviews-list" class="reviews-list"></div>
+
+    <div id="edit-panel" class="edit-panel">
+      <h3>Edit Review</h3>
+      <div id="edit-error" class="status danger" style="display:none"></div>
+      <div id="edit-success" class="status success" style="display:none"></div>
+
+      <label>
+        Product:
+        <input id="edit-product" type="text" disabled>
+      </label>
+
+      <label>
+        Rating (1-5):
+        <input id="edit-rating" type="number" min="1" max="5" required>
+      </label>
+
+      <label>
+        Review text:
+        <textarea id="edit-text" rows="4" required></textarea>
+      </label>
+
+      <button id="save-edit">Save changes</button>
+      <button id="cancel-edit" type="button">Cancel</button>
+    </div>
+
+  </div>
+
+  <script>
+    let editingReviewId = null;
+
+    async function apiGet(url) {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('Network error ' + res.status);
+      return res.json();
+    }
+
+    async function apiPut(url, payload) {
+      const res = await fetch(url, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (!res.ok) {
+        const errorBody = await res.json().catch(() => ({}));
+        throw new Error(errorBody.message || 'Error ' + res.status);
+      }
+      return res.json();
+    }
+
+    function showStatus(message, type = 'info') {
+      const statusEl = document.getElementById('status');
+      statusEl.textContent = message;
+      if (type === 'error') {
+        statusEl.style.background = '#fee';
+        statusEl.style.color = '#900';
+      } else {
+        statusEl.style.background = '#eef';
+        statusEl.style.color = '#006';
+      }
+    }
+
+    function clearStatus() {
+      const statusEl = document.getElementById('status');
+      statusEl.textContent = '';
+      statusEl.style.background = 'transparent';
+      statusEl.style.color = 'inherit';
+    }
+
+    function renderReviews(reviews) {
+      const list = document.getElementById('reviews-list');
+      list.innerHTML = '';
+
+      if (!reviews || reviews.length === 0) {
+        showStatus('You have not submitted any reviews yet.');
+        return;
+      }
+
+      clearStatus();
+
+      reviews.forEach(review => {
+        const card = document.createElement('div');
+        card.className = 'review-card';
+
+        card.innerHTML = `
+          <h3>${review.ProductName || 'Unknown product'}</h3>
+          <p><strong>Rating:</strong> ${review.Rating}</p>
+          <p>${review.ProductReview || ''}</p>
+          <div class="actions">
+            <button type="button" data-id="${review.ReviewID}" class="edit-btn">Edit</button>
+            <button type="button" data-id="${review.ReviewID}" class="delete-btn">Delete</button>
+          </div>
+        `;
+
+        list.appendChild(card);
+      });
+
+      document.querySelectorAll('.edit-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const reviewId = btn.dataset.id;
+          const reviewData = reviews.find(r => r.ReviewID === reviewId);
+          if (!reviewData) {
+            showStatus('Could not find review to edit.', 'error');
+            return;
+          }
+          openEditPanel(reviewData);
+        });
+      });
+    
+
+    document.querySelectorAll('.delete-btn').forEach(btn => {
+  btn.addEventListener('click', async () => {
+    const reviewId = btn.dataset.id;   // <-- correct variable
+
+    if (!confirm('Are you sure you want to delete this review?')) return;
+
+    try {
+      const res = await fetch(`/api/delete_review/${reviewId}`, { method: 'DELETE' });
+      const data = await res.json();
+
+      if (!data.success) {
+        showStatus(data.message || 'Failed to delete review.', 'error');
+        return;
+      }
+
+      showStatus('Review deleted successfully.', 'success');
+      await loadMyReviews();
+    } catch (err) {
+      showStatus('Delete failed: ' + err.message, 'error');
+    }
+  });
+});
+  }
+
+    function openEditPanel(review) {
+      editingReviewId = review.ReviewID;
+      document.getElementById('edit-product').value = review.ProductName || '';
+      document.getElementById('edit-rating').value = review.Rating;
+      document.getElementById('edit-text').value = review.ProductReview;
+      document.getElementById('edit-error').style.display = 'none';
+      document.getElementById('edit-success').style.display = 'none';
+      document.getElementById('edit-panel').style.display = 'block';
+      window.scrollTo({ top: document.getElementById('edit-panel').offsetTop - 20, behavior: 'smooth' });
+    }
+
+    function hideEditPanel() {
+      editingReviewId = null;
+      document.getElementById('edit-panel').style.display = 'none';
+    }
+
+    async function loadMyReviews() {
+      showStatus('Loading your reviews...');
+      try {
+        const data = await apiGet('/api/my-reviews');
+        if (!data.success) {
+          showStatus(data.message || 'Could not load reviews', 'error');
+          return;
+        }
+        renderReviews(data.reviews);
+      } catch (err) {
+        showStatus('Unable to load reviews: ' + err.message, 'error');
+      }
+    }
+
+    async function saveEdit() {
+      if (!editingReviewId) return;
+
+      const rating = Number(document.getElementById('edit-rating').value);
+      const review_text = document.getElementById('edit-text').value.trim();
+      if (!review_text) {
+        const errEl = document.getElementById('edit-error');
+        errEl.textContent = 'Review text cannot be empty.';
+        errEl.style.display = 'block';
+        return;
+      }
+      if (rating < 1 || rating > 5) {
+        const errEl = document.getElementById('edit-error');
+        errEl.textContent = 'Rating must be between 1 and 5.';
+        errEl.style.display = 'block';
+        return;
+      }
+
+      try {
+        const result = await apiPut(`/api/update_review/${editingReviewId}`, { review_text, rating });
+        if (result.success) {
+          document.getElementById('edit-success').textContent = 'Review updated successfully.';
+          document.getElementById('edit-success').style.display = 'block';
+          document.getElementById('edit-error').style.display = 'none';
+          await loadMyReviews();
+          setTimeout(() => hideEditPanel(), 1000);
+        } else {
+          document.getElementById('edit-error').textContent = result.message || 'Update failed.';
+          document.getElementById('edit-error').style.display = 'block';
+        }
+      } catch (err) {
+        document.getElementById('edit-error').textContent = err.message;
+        document.getElementById('edit-error').style.display = 'block';
+      }
+    }
+
+    document.getElementById('save-edit').addEventListener('click', saveEdit);
+    document.getElementById('cancel-edit').addEventListener('click', hideEditPanel);
+
+    document.addEventListener('DOMContentLoaded', () => {
+      loadMyReviews();
+    });
+  </script>
+</body>
+</html>
