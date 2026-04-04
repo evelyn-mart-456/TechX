@@ -1,0 +1,1 @@
+SELECT UserID, Username FROM UAccount;

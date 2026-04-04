@@ -11,6 +11,7 @@ const multer = require('multer');
 // Loading sql files here
 const register_sql = fs.readFileSync('./db/create_user.sql', 'utf8');
 const get_user_sql = fs.readFileSync('./db/get_user.sql', 'utf8');
+const get_users_sql = fs.readFileSync('./db/get_users.sql', 'utf8');
 const create_vote_sql = fs.readFileSync('./db/create_vote.sql', 'utf8');
 const get_votes_sql = fs.readFileSync('./db/get_votes.sql', 'utf8');
 const get_user_voted_sql = fs.readFileSync('./db/get_user_voted.sql', 'utf8');
@@ -36,6 +37,11 @@ const get_reviews_sql = fs.readFileSync('./db/get_reviews.sql', 'utf8');
 const get_reviews_by_product_sql = fs.readFileSync('./db/get_reviews_by_product.sql', 'utf8');
 const get_reviews_by_user_sql = fs.readFileSync('./db/get_reviews_by_user.sql', 'utf8');
 const update_review_sql = fs.readFileSync('./db/update_review.sql', 'utf8');
+
+const get_moderators_sql = fs.readFileSync('./db/get_moderators.sql', 'utf8');
+const add_moderator_sql = fs.readFileSync('./db/add_moderator.sql', 'utf8');
+const delete_moderator_sql = fs.readFileSync('./db/delete_moderator.sql', 'utf8');
+const delete_moderator_all_sql = fs.readFileSync('./db/delete_moderator_all.sql', 'utf8');
 
 const app = express();
 const port = 3000;
@@ -110,6 +116,14 @@ app.get('/staff-register', (req, res) => {
 app.get('/staff', (req, res) => {
     if(req.session.staffId) {
         res.sendFile(path.join(__dirname, 'public', 'staff.html'));
+    } else {
+        res.redirect('/staff-login');
+    }
+});
+
+app.get('/board-moderators', (req, res) => {
+    if(req.session.staffId) {
+        res.sendFile(path.join(__dirname, 'public', 'board-moderators.html'));
     } else {
         res.redirect('/staff-login');
     }
@@ -750,6 +764,73 @@ app.delete('/api/delete_review/:id', (req, res) => {
             res.json({ success: true, message: 'Review deleted successfully' });
         }
     );
+});
+
+app.get('/moderators', requireStaff, (req, res) => {
+    db.query(get_moderators_sql, [], (err, moderators) => {
+        if(err) {
+            console.error(err);
+            return res.status(500).send('Server error');
+        }
+
+        db.query(get_users_sql, [], (err, users) => {
+            if(err) {
+                console.error(err);
+                return res.status(500).send('Server error');
+            }
+
+            db.query(get_products_sql, [], (err, products) => {
+                if(err) {
+                    console.error(err);
+                    return res.status(500).send('Server error');
+                }
+
+                res.json({moderators: moderators, users: users, products: products});
+            });
+        })
+    });
+});
+
+app.post('/moderators', requireStaff, (req, res) => {
+    db.query(delete_moderator_all_sql, [req.body.userID], (err, results) => {
+        if(err) {
+            console.error(err);
+            return res.status(500).send('Server error');
+        }
+
+        if(!req.body.moderators || req.body.moderators.length === 0) {
+            return res.json({success: true});
+        }
+        else {
+            const values = req.body.moderators.map(m => [m.userID, m.productID]);
+
+            db.query(add_moderator_sql, [values], (err, results) => {
+                if(err) {
+                    console.error(err);
+                    return res.status(500).send('Server error');
+                }
+                
+                if(results.affectedRows === 0)
+                    res.json({success: false});
+                else
+                    res.json({success: true});
+            });
+        }
+    });
+});
+
+app.post('/delete-moderator', requireStaff, (req, res) => {
+    db.query(delete_moderator_all_sql, [req.body.userID], (err, results) => {
+        if(err) {
+            console.error(err);
+            return res.status(500).send('Server error');
+        }
+        
+        if(results.affectedRows === 0)
+            res.json({success: false});
+        else
+            res.json({success: true});
+    });
 });
 
 app.listen(port, () => {
