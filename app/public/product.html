@@ -60,6 +60,9 @@
                             <th>
                                 User
                             </th>
+                            <th>
+                                Image
+                            </th>
                         </tr>
                     </thead>
                     <tbody id="productReviews">
@@ -72,6 +75,9 @@
                             </td>
                             <td>
                                 <button id="submitReview">Submit Review</button>
+                            </td>
+                            <td>
+                                <input id="reviewImageInput" name="review_image" type="file" accept="image/*">
                             </td>
                         </tr>
                     </tbody>
@@ -99,6 +105,7 @@
                     <td>${review.ProductReview}</td>
                     <td>${review.Rating}</td>
                     <td>${review.UserName}</td>
+                    <td>${review.Image ? `<img src="/review-images/${review.Image}" alt="Review image" style="max-width: 100px; max-height: 100px;">` : ''}</td>
                 `;
 
                 reviewTable.insertBefore(row, addReviewRow);
@@ -135,15 +142,19 @@
 
                 const review = document.getElementById("reviewTextarea").value;
                 const rating = document.getElementById("ratingInput").value;
+                const imageFile = document.getElementById("reviewImageInput").files[0];
 
                 const formData = new FormData();
                 formData.append("review_text", review);
                 formData.append("rating", rating);
                 formData.append("product_id", id);
+                if (imageFile) {
+                    formData.append("review_image", imageFile);
+                }
 
                 const res = await fetch('/submit_review', {
                     method: 'POST',
-                    body: new URLSearchParams(formData)
+                    body: formData
                 });
                 
                 const data = await res.json();
