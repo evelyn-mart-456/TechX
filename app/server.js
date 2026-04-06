@@ -7,6 +7,7 @@ const dbConfig = require('./dbConfig');
 const fs = require('fs');
 const session = require('express-session');
 const multer = require('multer');
+const { connect } = require('http2');
 
 // Loading sql files here
 const register_sql = fs.readFileSync('./db/create_user.sql', 'utf8');
@@ -40,8 +41,12 @@ const update_review_sql = fs.readFileSync('./db/update_review.sql', 'utf8');
 
 const get_moderators_sql = fs.readFileSync('./db/get_moderators.sql', 'utf8');
 const add_moderator_sql = fs.readFileSync('./db/add_moderator.sql', 'utf8');
-const delete_moderator_sql = fs.readFileSync('./db/delete_moderator.sql', 'utf8');
 const delete_moderator_all_sql = fs.readFileSync('./db/delete_moderator_all.sql', 'utf8');
+const get_moderated_boards_sql = fs.readFileSync('./db/get_moderated_boards.sql', 'utf8');
+const get_threads_sql = fs.readFileSync('./db/get_threads.sql', 'utf8');
+const get_thread_sql = fs.readFileSync('./db/get_thread.sql', 'utf8');
+const create_thread_sql = fs.readFileSync('./db/create_thread.sql', 'utf8');
+const create_post_sql = fs.readFileSync('./db/create_post.sql', 'utf8');
 
 const app = express();
 const port = 3000;
@@ -151,10 +156,20 @@ app.get('/my-reviews', (req, res) => {
 
 app.get('/api/session', (req, res) => {
     if(req.session.userId && req.session.username) {
-        return res.json({
-            loggedIn: true,
-            username: req.session.username
-        })
+
+        db.query(get_moderated_boards_sql, [req.session.userId], (err, results) => {
+            if(err) {
+                console.error(err);
+                return res.status(500).send('Server error');
+            }
+
+            return res.json({
+                loggedIn: true,
+                username: req.session.username,
+                userID: req.session.userId,
+                moderators: results
+            });
+        });
     } else {
         return res.json({loggedIn: false});
     }
@@ -831,6 +846,103 @@ app.post('/delete-moderator', requireStaff, (req, res) => {
         else
             res.json({success: true});
     });
+});
+
+app.get('/threads/:id', (req, res) => {
+    db.query(get_threads_sql, [req.params.id], (err, results) => {
+        if(err) {
+            console.error(err);
+            return res.status(500).send('Server error');
+        }
+
+        return res.json(results);
+    })
+});
+
+app.get('/product/:pid/thread/:tid', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'thread.html'));
+});
+
+app.get('/product/:pid/posts/:tid', (req, res) => {
+    const productId = req.params.pid;
+    const threadId = req.params.tid;
+
+    db.query(get_thread_sql, [threadId], (err, results) => {
+        if(err) {
+            console.error(err);
+            return res.status(500).send('Server error');
+        }
+
+        return res.json({posts: results});
+    })
+});
+
+app.post('/product/:pid/thread/:tid', (req, res) => {
+    if(req.session.userId) {
+        db.query(create_post_sql, [req.session.userId, req.params.tid, req.body.message], (err, result) => {
+            if(err) {
+                console.error(err);
+                return res.status(500).send('Server error');
+            }
+
+            return res.redirect(`/product/${req.params.pid}/thread/${req.params.tid}`);
+        })
+    } else
+        return res.redirect('/login');
+})
+
+app.post('/product/:id/thread', (req, res) => {
+    if(req.session.userId) {
+        db.getConnection((err, connection) => {
+            if (err) {
+                console.error(err);
+                return res.status(500).send('Server error');
+            }
+
+            connection.beginTransaction(err => {
+                if(err) {
+                    console.error(err);
+                    return res.status(500).send('Server error');
+                }
+
+                connection.query(create_thread_sql, [req.session.userId, req.params.id, req.body.title], (err, threadResult) => {
+                    if(err) {
+                        return connection.rollback(() => {
+                            console.error(err);
+                            return res.status(500).send('Server error');
+                        });
+                    }
+
+                    const threadId = threadResult.insertId;
+
+                    connection.query(create_post_sql, [req.session.userId, threadId, req.body.message], (err) => {
+                        if(err) {
+                            return connection.rollback(() => {
+                                console.error(err);
+                                return res.status(500).send('Server error');
+                            });
+                        }
+                        
+                        connection.commit(err => {
+                            if (err) {
+                                return connection.rollback(() => {
+                                    connection.release();
+                                    console.error(err);
+                                    return res.status(500).send('Server error');
+                                });
+                            }
+
+                            connection.release();
+                            return res.redirect(`/product/${req.params.id}/thread/${threadId}`);
+                        });
+                    });
+                });
+
+            })
+        });
+    }
+    else
+        return res.redirect("/login");
 });
 
 app.listen(port, () => {

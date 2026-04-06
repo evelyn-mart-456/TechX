@@ -79,6 +79,30 @@
                 <p id="submitError"></p>
             </div>
         </div>
+        <div class="row mt-4">
+            <div class="col">
+                <div class="card">
+                <div class="card-header h5 mb-0 fw-bold">Product Discussion</div>
+                <div class="card-body">
+                    <form id="createThreadForm" method="POST" hidden>
+                        <input type="text" name="title" class="form-control mb-2" /><textarea class="form-control mb-2" name="message"></textarea><input type="submit" value="Submit" class="btn btn-primary" />
+                    </form>
+                </div>
+                <div class="px-3 pb-3">
+                    <table class="table">
+                    <thead>
+                        <tr>
+                            <th class="w-100">Topics</th><th class="text-nowrap align-middle">Replies</th><th class="text-nowrap">Last Post</th>
+                        </tr>
+                    </thead>
+                    <tbody id="productThreads">
+
+                    </tbody>
+                </table>
+                </div>
+                </div>
+            </div>
+        </div>
     </div>
     <script src="/js/login-form.js" defer></script>
     <script>
@@ -104,6 +128,49 @@
                 reviewTable.insertBefore(row, addReviewRow);
             });
         }
+
+        async function getSession() {
+            const res = await fetch('/api/session');
+            const session = await res.json();
+
+            return session;
+        }
+
+        async function loadPosts(id) {
+            const session = await getSession();
+
+            const res = await fetch(`/threads/${id}`);
+            const data = await res.json();
+
+            const createThreadForm = document.getElementById("createThreadForm");
+
+            if(session.loggedIn) {
+                createThreadForm.hidden = false;
+                createThreadForm.action = `/product/${id}/thread`;
+            }
+
+            const threadTable = document.getElementById("productThreads");
+
+            data.forEach(thread => {
+                const threadRow = document.createElement("tr");
+                
+                threadRow.innerHTML = `
+                    <td>
+                        <div><a href="/product/${thread.ProductID}/thread/${thread.ThreadID}">${thread.Title}</a></div>
+                        <div>by ${thread.CreatorName} on ${new Date(thread.CreationDate).toLocaleString()}</div>
+                    </td>
+                    <td class="align-middle text-center">${thread.Replies}</td>
+                    <td class="text-nowrap">
+                        <div>by ${thread.LastPosterName}</div>
+                        <div>${new Date(thread.LastPostDate).toLocaleString()}</div>
+                    </td>
+                `;
+
+                threadTable.appendChild(threadRow);
+            });
+        }
+
+        loadPosts(id);
 
         async function loadProduct() {
             const res = await fetch(`/products/${id}`);
