@@ -48,6 +48,7 @@
         </div>
         <div class="row">
             <div class="col mt-4">
+                <h3 id="averageRating" class="mb-3"></h3>
                 <table class="table">
                     <thead>
                         <tr>
@@ -96,8 +97,14 @@
 
             const reviewTable = document.getElementById("productReviews");
             const addReviewRow = document.getElementById("addReviewRow");
+            const reviews = data.reviews;
 
-
+            if(reviews.length > 0) {
+                const avg= reviews.reduce((sum, review) => sum + review.Rating, 0) / reviews.length;
+                document.getElementById("averageRating").innerText += ` Average Rating: ${avg.toFixed(1)} ⭐ (${reviews.length} reviews)`;
+            }
+            else {document.getElementById("averageRating").innerText += " No reviews yet";
+        }
             data.reviews.forEach(review => {
                 const row = document.createElement("tr");
 
