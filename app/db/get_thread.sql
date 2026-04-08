@@ -6,7 +6,8 @@ SELECT
     poster.UserID,
     post.CreationDate,
     post.ModificationDate,
-    post.Text
+    post.Text,
+    post.PostID
 FROM Thread
 LEFT JOIN ThreadPost post
     ON post.ThreadID = Thread.ThreadID
