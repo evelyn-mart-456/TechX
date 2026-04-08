@@ -3,6 +3,7 @@
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link href="/css/style.css" rel="stylesheet">
     
 </head>
@@ -32,7 +33,7 @@
         <div class="row mt-4">
             <div class="col">
                 <div class="card">
-                <div class="card-header h5 mb-0 fw-bold" id="discussionTitle"></div>
+                <div class="card-header h5 mb-0 fw-bold text-bg-dark" id="discussionTitle"></div>
                 <div class="px-3 pb-3">
                     <table class="table">
                         <tbody id="discussionPosts">
@@ -44,6 +45,24 @@
             </div>
         </div>
     </div>
+
+    <div class="modal fade" id="confirmDeleteModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirm Delete</h5>
+            </div>
+            <div class="modal-body">
+                Are you sure you want to delete this post? This action cannot be reversed
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="cancelDeleteBtn">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Delete</button>
+            </div>
+            </div>
+        </div>
+    </div>
+
     <script src="/js/login-form.js" defer></script>
     <script>
         const parts = window.location.pathname.split("/").filter(Boolean);
@@ -78,15 +97,54 @@
                 const postRow = document.createElement("tr");
                 
                 postRow.innerHTML = `
-                    <td>
+                    <td class="text-nowrap border-right">
                         <div><a href="/product/${post.ProductID}/thread/${post.ThreadID}">${post.Title}</a></div>
                         <div>by ${post.Username} on ${new Date(post.CreationDate).toLocaleString()}</div>
-                        <div>${post.Text}</div>
+                    </td>
+                    <td class="w-100">
+                        <div>
+                            ${
+                            (session.moderatedBoards && session.moderatedBoards.includes(Number(productId))) || post.UserID === session.userID ?
+                            `<span style="float:right">
+                                <button class="btn btn-link p-0 ms-1 edit-post-btn" data-post-id="${post.PostID}" title="Edit">
+                                    <i class="bi bi-pencil-square"></i>
+                                </button>
+                                <button class="btn btn-link p-0 ms-1 delete-btn" data-post-id="${post.PostID}" title="Delete">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </span>
+                            ` : ''}
+                            ${post.Text}
+                        </div>
                         <div ${!post.ModificationDate ? "hidden" : ""}>${new Date(post.ModificationDate).toLocaleString()}</div>
                     </td>
                 `;
 
                 postTable.appendChild(postRow);
+            });
+
+            let selectedPost = null;
+
+            document.querySelectorAll('.edit-post-btn').forEach(btn => {
+                btn.addEventListener('click', event => {
+                    selectedPost = btn.dataset.postId;
+                });
+            });
+
+            document.querySelectorAll('.delete-btn').forEach(btn => {
+                btn.addEventListener('click', event => {
+                    selectedPost = btn.dataset.postId;
+
+                    const modal = new bootstrap.Modal(document.getElementById('confirmDeleteModal'));
+                    modal.show();
+                });
+            });
+
+            document.getElementById('confirmDeleteBtn').addEventListener('click', () => {
+                if(!selectedPost) return;
+
+                fetch(`/product/${productId}/post/${selectedPost}`, { method: 'DELETE'})
+                    .then(() => location.reload());
             });
 
             if(session.loggedIn) {
