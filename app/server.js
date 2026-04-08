@@ -62,7 +62,15 @@ const productStorage = multer.diskStorage({
   }
 });
 
+const reviewStorage = multer.diskStorage({
+  destination: "public/review-images/",
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + "-" + file.originalname);
+  }
+});
+
 const uploadProductImg = multer({ storage: productStorage });
+const uploadReviewImg = multer({ storage: reviewStorage });
 
 app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: true}));
@@ -231,7 +239,7 @@ app.get('/api/Reviews/:id', (req, res) => {
             return res.status(500).json({ success: false, message: err.message });
         }
 
-        return res.json({results: results});
+        return res.json({ success: true, reviews: results });
     });
 });
 
@@ -697,12 +705,17 @@ app.post('/staff-activate', requireStaff, (req, res) => {
     }
 });
 
-app.post('/submit_review', (req, res) => {
+app.post('/submit_review', uploadReviewImg.fields([{ name: 'review_image', maxCount: 1 }]), (req, res) => {
+    console.log('submit_review called');
+    console.log('req.body:', req.body);
+    console.log('req.files:', req.files);
     const reviewID = crypto.randomUUID();
     const prodId = req.body.product_id;
     const prodName = req.body.product_name;
     const rating = req.body.rating;
     const review = req.body.review_text;
+    const imagePath = req.files?.review_image?.[0]?.filename || null;
+    console.log('imagePath:', imagePath);
 
     if (!req.session.userId) {
         return res.status(401).json({ success: false, message: 'Log in to submit review' });
@@ -719,7 +732,7 @@ app.post('/submit_review', (req, res) => {
                 return res.status(404).json({ success: false, message: 'Product not found' });
             }
             const productName = results[0].ProductName;
-            db.query(create_review_sql, [reviewID, prodId, productName, review, rating, req.session.userId], (err, result) => {
+            db.query(create_review_sql, [reviewID, prodId, productName, review, rating, req.session.userId, imagePath], (err, result) => {
                 if (err) {
                     console.error(err);
                     return res.status(500).json({ success: false, message: err.message });
@@ -739,12 +752,12 @@ app.post('/submit_review', (req, res) => {
                 return res.status(404).json({ success: false, message: 'Product not found' });
             }
             const productId = results[0].ProductID;
-            db.query(create_review_sql, [reviewID, productId, prodName, review, rating, req.session.userId], (err, result) => {
+            db.query(create_review_sql, [reviewID, productId, prodName, review, rating, req.session.userId, imagePath], (err, result) => {
                 if (err) {
                     console.error(err);
                     return res.status(500).json({ success: false, message: err.message });
                 }
-                res.json({ success: true, message: "Review submitted successfully" });
+                res.json({ success: true, message: "Review submitted successfully", imagePath });
             });
         });
     } else {
@@ -752,17 +765,18 @@ app.post('/submit_review', (req, res) => {
     }
 });
 
-app.put('/api/update_review/:id', (req, res) => {
+app.put('/api/update_review/:id', uploadReviewImg.fields([{ name: 'review_image', maxCount: 1 }]), (req, res) => {
 if (!req.session.userId) {
     return res.status(401).json({ success: false, message: 'Log in to update review' });
-}   
+}
 const {review_text, rating} = req.body;
 const reviewId = req.params.id;
+const imagePath = req.files?.review_image?.[0]?.filename || req.body.existing_image || null;
 //validate rating
 if(rating < 1 || rating > 5) {
     return res.status(400).json({ success: false, message: 'invalid rating' });
 }
-db.query(update_review_sql, [review_text, rating, reviewId, req.session.userId], (err, result) => {
+db.query(update_review_sql, [review_text, rating, imagePath, reviewId, req.session.userId], (err, result) => {
     if (err) {
         console.error(err);
         return res.status(500).json({ success: false, message: err.message });

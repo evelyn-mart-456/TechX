@@ -100,6 +100,7 @@ button:hover {
           <h3>${review.ProductName}</h3>
           <p>Rating: ${review.Rating}</p>
           <p>${review.ProductReview}</p>
+          ${review.Image ? `<img src="/review-images/${review.Image}" alt="Review image" style="max-width: 200px; max-height: 200px;">` : ''}
           <hr>
         </div>
         `;
