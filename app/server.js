@@ -1,5 +1,6 @@
+const { v4: uuidv4 } = require('uuid');
 const express = require('express');
-const mysql = require('mysql2');
+const mysql = require('mysql2/promise'); // change this line
 const bodyParser = require('body-parser');
 const crypto = require('crypto');
 const path = require('path');
@@ -7,6 +8,7 @@ const dbConfig = require('./dbConfig');
 const fs = require('fs');
 const session = require('express-session');
 const multer = require('multer');
+const cors = require("cors");
 const { connect } = require('http2');
 
 // Loading sql files here
@@ -36,8 +38,6 @@ const delete_product_category_sql = fs.readFileSync('./db/delete_product_categor
 const create_review_sql = fs.readFileSync('./db/create_review.sql', 'utf8');
 const get_reviews_sql = fs.readFileSync('./db/get_reviews.sql', 'utf8');
 const get_reviews_by_product_sql = fs.readFileSync('./db/get_reviews_by_product.sql', 'utf8');
-const get_reviews_by_user_sql = fs.readFileSync('./db/get_reviews_by_user.sql', 'utf8');
-const update_review_sql = fs.readFileSync('./db/update_review.sql', 'utf8');
 
 const get_moderators_sql = fs.readFileSync('./db/get_moderators.sql', 'utf8');
 const add_moderator_sql = fs.readFileSync('./db/add_moderator.sql', 'utf8');
@@ -157,15 +157,6 @@ app.get('/Reviews', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'Reviews.html'));
 });
 
-app.get('/my-reviews', (req, res) => {
-    if(req.session.userId) {
-        res.sendFile(path.join(__dirname, 'public', 'my-reviews.html'));
-    } else {
-        res.redirect('/login'); //redirect if not logged in
-    }
-});
-
-
 app.get('/api/session', (req, res) => {
     if(req.session.userId && req.session.username) {
 
@@ -197,38 +188,6 @@ app.get('/api/Reviews', (req, res) => {
         res.json({ success: true, reviews: results });
     });
 });
-//get all products for dropdown
-app.get('/api/products', (req, res) => {
-    db.query(get_products_sql, (err, results) => {
-        if (err) {
-            console.error(err);
-            return res.status(500).json({ success: false, message: err.message });
-        }
-        res.json({ success: true, products: results });
-    });
-});
-//get reviews for a specific product and send them to the frontend
-//get product from database and send to frontend
-app.get('/api/Product/:id', (req, res) => {
-    const productId = req.params.id;
-    db.query(get_product_sql, [productId], (err, results) => {
-        if (err) {
-            console.error(err);
-            return res.status(500).json({ success: false, message: err.message });
-        }
-    });
-});
-//get the reviews for the product and send them to the frontend
-app.get('/api/Reviews/:Product_name', (req, res) => {
-    const productName = req.params.Product_name;
-    db.query(get_reviews_by_product_sql, [productName], (err, results) => {
-        if (err) {
-            console.error(err);
-            return res.status(500).json({ success: false, message: err.message });
-        }
-        res.json({ success: true, reviews: results });
-    });
-});
 
 app.get('/api/Reviews/:id', (req, res) => {
     const id = req.params.id;
@@ -243,20 +202,6 @@ app.get('/api/Reviews/:id', (req, res) => {
     });
 });
 
-//get reviews for a specific user and send them to the frontend
-app.get('/api/my-reviews', (req, res) => {
-    if(!req.session.userId) {
-        return res.status(401).json({ success: false, message: 'You must be logged in to view your reviews.' });
-    }
-
-    db.query(get_reviews_by_user_sql, [req.session.userId], (err, results) => {
-        if(err) {
-            console.error('Database error:', err);
-            return res.status(500).json({ success: false, message: err.message });
-        }
-        res.json({ success: true, reviews: results });
-    });
-});
 
 app.post('/register', (req, res) => {
     const username = req.body.username;
@@ -710,8 +655,7 @@ app.post('/submit_review', uploadReviewImg.fields([{ name: 'review_image', maxCo
     console.log('req.body:', req.body);
     console.log('req.files:', req.files);
     const reviewID = crypto.randomUUID();
-    const prodId = req.body.product_id;
-    const prodName = req.body.product_name;
+    const prod = req.body.product_id;
     const rating = req.body.rating;
     const review = req.body.review_text;
     const imagePath = req.files?.review_image?.[0]?.filename || null;
@@ -786,31 +730,77 @@ db.query(update_review_sql, [review_text, rating, imagePath, reviewId, req.sessi
     }
     res.json({ success: true, message: 'Review updated' });
 });
+
+
+const polls = []; // In-memory storage
+
+// GET all polls
+app.get("/getpolls", (req, res) => {
+    res.json({ polls });
 });
 
-app.delete('/api/delete_review/:id', (req, res) => {
-    if (!req.session.userId) {
-        return res.status(401).json({ success: false, message: 'Log in to delete review' });
+// POST create a new poll
+app.post("/createpoll", (req, res) => {
+    const { question, options } = req.body;
+    if (!question || !options || options.length < 2) {
+        return res.status(400).json({ error: "Question and at least 2 options required" });
     }
 
-    const reviewId = req.params.id;
+    const newPoll = {
+        id: uuidv4(),
+        question,
+        options: options.map((opt, i) => ({
+            OptionID: `opt${i + 1}`,
+            OptionName: opt,
+            Votes: 0
+        }))
+    };
 
-    db.query(
-        'DELETE FROM Reviews WHERE ReviewID = ? AND UserID = ?',
-        [reviewId, req.session.userId],
-        (err, result) => {
-            if (err) {
-                console.error(err);
-                return res.status(500).json({ success: false, message: err.message });
-            }
-            if (result.affectedRows === 0) {
-                return res.status(404).json({ success: false, message: 'Review not found or you do not own this review' });
-            }
-            res.json({ success: true, message: 'Review deleted successfully' });
-        }
-    );
+    polls.push(newPoll);
+    res.json({ success: true, poll: newPoll });
 });
 
+// POST vote for a poll option
+app.post("/votepoll", (req, res) => {
+    const { PollID, OptionID } = req.body;
+    const poll = polls.find(p => p.id === PollID);
+    if (!poll) return res.status(404).json({ error: "Poll not found" });
+
+    const option = poll.options.find(o => o.OptionID === OptionID);
+    if (!option) return res.status(404).json({ error: "Option not found" });
+
+    option.Votes += 1;
+    res.json({ results: poll.options });
+});
+
+const PORT = 3000;
+app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
+
+
+
+let articles = [];
+
+// Load existing articles
+if (fs.existsSync("articles.json")) {
+    articles = JSON.parse(fs.readFileSync("articles.json"));
+}
+
+app.post("/createarticle", (req, res) => {
+    const { title, author, content } = req.body;
+
+    const newArticle = {
+        id: "article_" + Date.now(),
+        title,
+        author,
+        content
+    };
+
+    articles.push(newArticle);
+
+    // SAVE TO FILE
+    fs.writeFileSync("articles.json", JSON.stringify(articles, null, 2));
+
+    res.json({ success: true });
 app.get('/moderators', requireStaff, (req, res) => {
     db.query(get_moderators_sql, [], (err, moderators) => {
         if(err) {
@@ -1112,4 +1102,8 @@ app.post('/product/:id/thread', (req, res) => {
 
 app.listen(port, () => {
     console.log(`Express server running at http://localhost:${port}/`);
+});
+
+app.get("/getarticles", (req, res) => {
+    res.json({ articles });
 });
