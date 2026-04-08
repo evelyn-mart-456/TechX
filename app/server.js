@@ -766,14 +766,6 @@ app.delete('/api/delete_review/:id', (req, res) => {
     );
 });
 
-db.query('ALTER TABLE Reviews ADD COLUMN Image VARCHAR(300)', (err, result) => {
-    if (err && !err.message.includes('Duplicate column name')) {
-        console.error('Error adding Image column:', err);
-    } else {
-        console.log('Image column added to Reviews table or already exists');
-    }
-});
-
 app.listen(port, () => {
     console.log(`Express server running at http://localhost:${port}/`);
 });
