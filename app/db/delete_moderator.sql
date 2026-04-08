@@ -1,0 +1,1 @@
+DELETE FROM BoardModerators WHERE UserID = ? AND ProductID = ?;
