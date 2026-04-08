@@ -1,0 +1,4 @@
+SELECT sci.ItemID, sci.ProductID, p.ProductName, p.Price, sci.Quantity, sci.PriceAtAdd
+FROM ShoppingCartItems sci
+JOIN Product p ON sci.ProductID = p.ProductID
+WHERE sci.CartID = ?
