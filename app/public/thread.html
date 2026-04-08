@@ -114,9 +114,9 @@
                                 </button>
                             </span>
                             ` : ''}
-                            ${post.Text}
+                            <span class="post-text" data-post-id="${post.PostID}">${post.Text}</span>
                         </div>
-                        <div ${!post.ModificationDate ? "hidden" : ""}>${new Date(post.ModificationDate).toLocaleString()}</div>
+                        <div ${!post.ModificationDate ? "hidden" : ""}>modified: ${new Date(post.ModificationDate).toLocaleString()}</div>
                     </td>
                 `;
 
@@ -128,6 +128,37 @@
             document.querySelectorAll('.edit-post-btn').forEach(btn => {
                 btn.addEventListener('click', event => {
                     selectedPost = btn.dataset.postId;
+
+                    const postText = document.querySelector(`span[data-post-id="${selectedPost}"]`);
+                    const postTextArea = document.createElement("textarea");
+                    const acceptDiv = document.createElement("div");
+
+                    acceptDiv.innerHTML = `
+                        <button class="btn btn-primary me-1 accept-changes-btn" data-post-id="${selectedPost}">Accept</button>
+                        <button class="btn btn-secondary cancel-changes-btn" data-post-id="${selectedPost}">Cancel</button>
+                    `;
+
+                    postTextArea.innerText = postText.innerText;
+
+                    postText.replaceWith(postTextArea);
+
+                    postTextArea.after(acceptDiv);
+
+                    const acceptBtn = document.querySelector(`.accept-changes-btn`);
+                    acceptBtn.addEventListener('click', event => {
+                        const formData = new FormData();
+
+                        formData.append("message", postTextArea.value);
+
+                        fetch(`/product/${productId}/post/${selectedPost}`, {method: 'PATCH', body: new URLSearchParams(formData)})
+                            .then(() => location.reload());
+                    });
+
+                    const cancelBtn = document.querySelector(`.cancel-changes-btn`);
+                    cancelBtn.addEventListener('click', event => {
+                        postTextArea.replaceWith(postText);
+                        acceptDiv.remove();
+                    });
                 });
             });
 

@@ -50,6 +50,7 @@ const update_thread_sql = fs.readFileSync('./db/update_thread.sql', 'utf8');
 const delete_thread_sql = fs.readFileSync('./db/delete_thread.sql', 'utf8');
 const create_post_sql = fs.readFileSync('./db/create_post.sql', 'utf8');
 const get_post_sql = fs.readFileSync('./db/get_post.sql', 'utf8');
+const update_post_sql = fs.readFileSync('./db/update_post.sql', 'utf8');
 const delete_post_sql = fs.readFileSync('./db/delete_post.sql', 'utf8');
 
 const app = express();
@@ -893,9 +894,9 @@ app.get('/product/:pid/posts/:tid', (req, res) => {
     });
 });
 
-app.patch('/post/:pid', (req, res) => {
+app.patch('/product/:id/post/:pid', (req, res) => {
     if(req.session.userId) {
-        if(req.session.moderatedBoards && req.session.moderatedBoards.includes(Number(req.params.pid))) {
+        if(req.session.moderatedBoards && req.session.moderatedBoards.includes(Number(req.params.id))) {
             db.query(update_post_sql, [req.body.message, req.params.pid], (err, result) => {
                 if(err) {
                     console.error(err);
@@ -927,7 +928,6 @@ app.patch('/post/:pid', (req, res) => {
 app.delete('/product/:id/post/:pid', (req, res) => {
     if(req.session.userId) {
         if(req.session.moderatedBoards && req.session.moderatedBoards.includes(Number(req.params.id))) {
-            console.log("Mod delete path.");
             db.query(delete_post_sql, [req.params.pid], (err, result) => {
                 if(err) {
                     console.error(err);
@@ -937,7 +937,6 @@ app.delete('/product/:id/post/:pid', (req, res) => {
                 return res.json({success: true});
             });
         } else {
-            console.log("Logged in user delete path");
             db.query(get_post_sql, [req.params.pid], (err, results) => {
                 if(results[0].UserID === req.session.userId) {
                     db.query(delete_post_sql, [req.params.pid], (err, result) => {
