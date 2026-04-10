@@ -965,7 +965,7 @@ app.post('/product/:pid/thread/:tid', (req, res) => {
                 return res.status(500).send('Server error');
             }
 
-            return res.redirect(`/product/${req.params.pid}/thread/${req.params.tid}`);
+            return res.redirect(`/product/${req.params.pid}/thread/${req.params.tid}/#${result.insertId}`);
         });
     } else
         return res.status(403).send('Forbidden');
