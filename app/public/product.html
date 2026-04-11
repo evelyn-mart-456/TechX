@@ -86,7 +86,7 @@
                 <div class="card-header h5 mb-0 fw-bold">Product Discussion</div>
                 <div class="card-body">
                     <form id="createThreadForm" method="POST" hidden>
-                        <input type="text" name="title" class="form-control mb-2" /><textarea class="form-control mb-2" name="message"></textarea><input type="submit" value="Submit" class="btn btn-primary" />
+                        <input type="text" name="title" class="form-control mb-2" /><input type="submit" value="Submit" class="btn btn-primary" />
                     </form>
                 </div>
                 <div class="px-3 pb-3">
@@ -141,6 +141,7 @@
     </div>
 
     <script src="/js/login-form.js" defer></script>
+    <script src="/js/post-editor.js"></script>
     <script>
         const id = window.location.pathname.split('/').pop();
         
@@ -183,6 +184,10 @@
             if(session.loggedIn) {
                 createThreadForm.hidden = false;
                 createThreadForm.action = `/product/${id}/thread`;
+                const postEditor = buildPostEditor();
+                const submitBtn = createThreadForm.querySelector("input[type='submit']");
+
+                submitBtn.before(postEditor.root);
             }
 
             const threadTable = document.getElementById("productThreads");

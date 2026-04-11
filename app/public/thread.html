@@ -312,9 +312,9 @@
             const data = await res.json();
 
             document.getElementById("discussionTitle").innerHTML = `
-                <a href="/product/${productId}" class="text-white text-decoration-none">← Back to Product Page</a>
+                <a href="/product/${productId}" class="small fs-6 text-white text-decoration-none">← Back to Product Page</a>
                 <span class="text-muted text-white"> / </span>
-                <span class="fw-semibold text-white">${data.posts[0].Text}</span>
+                <span class="fw-semibold text-white">${data.posts[0].Title}</span>
             `;
 
             posts = data.posts;
