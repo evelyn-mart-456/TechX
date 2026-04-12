@@ -142,6 +142,17 @@ app.get('/my-reviews', (req, res) => {
     }
 });
 
+app.get('/shopping-cart', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'shopping-cart.html'));
+});
+
+app.get('/purchase-history', (req, res) => {
+    if(req.session.userId) {
+        res.sendFile(path.join(__dirname, 'public', 'purchase-history.html'));
+    } else {
+        res.redirect('/login');
+    }
+});
 
 app.get('/api/session', (req, res) => {
     if(req.session.userId && req.session.username) {
