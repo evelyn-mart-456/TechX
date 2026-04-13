@@ -156,6 +156,15 @@ app.get('/Review', (req, res) => {
 app.get('/Reviews', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'Reviews.html'));
 });
+
+app.get('/my-reviews', (req, res) => {
+    if(req.session.userId) {
+        res.sendFile(path.join(__dirname, 'public', 'my-reviews.html'));
+    } else {
+        res.redirect('/login');
+    }
+});
+
 app.get('/shopping-cart', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'shopping-cart.html'));
 });
@@ -666,7 +675,7 @@ app.post('/submit_review', uploadReviewImg.fields([{ name: 'review_image', maxCo
     console.log('req.body:', req.body);
     console.log('req.files:', req.files);
     const reviewID = crypto.randomUUID();
-    const prod = req.body.product_id;
+    const prodId = req.body.product_id;
     const rating = req.body.rating;
     const review = req.body.review_text;
     const imagePath = req.files?.review_image?.[0]?.filename || null;
@@ -728,9 +737,10 @@ const {review_text, rating} = req.body;
 const reviewId = req.params.id;
 const imagePath = req.files?.review_image?.[0]?.filename || req.body.existing_image || null;
 //validate rating
-if(rating < 1 || rating > 5) {
+if (rating < 1 || rating > 5) {
     return res.status(400).json({ success: false, message: 'invalid rating' });
 }
+
 db.query(update_review_sql, [review_text, rating, imagePath, reviewId, req.session.userId], (err, result) => {
     if (err) {
         console.error(err);
@@ -741,7 +751,7 @@ db.query(update_review_sql, [review_text, rating, imagePath, reviewId, req.sessi
     }
     res.json({ success: true, message: 'Review updated' });
 });
-
+});
 
 const polls = []; // In-memory storage
 
@@ -812,6 +822,7 @@ app.post("/createarticle", (req, res) => {
     fs.writeFileSync("articles.json", JSON.stringify(articles, null, 2));
 
     res.json({ success: true });
+});
 app.get('/moderators', requireStaff, (req, res) => {
     db.query(get_moderators_sql, [], (err, moderators) => {
         if(err) {
@@ -908,10 +919,10 @@ app.get('/product/:pid/posts/:tid', (req, res) => {
     });
 });
 
-app.listen(port, () => {
-    console.log(`Express server running at http://localhost:${port}/`);
-});
-
 app.get("/getarticles", (req, res) => {
     res.json({ articles });
+});
+
+app.listen(port, () => {
+    console.log(`Express server running at http://localhost:${port}/`);
 });

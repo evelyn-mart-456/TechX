@@ -51,6 +51,21 @@
         <div class="row">
             <div class="col mt-4">
                 <h3 id="averageRating" class="mb-3"></h3>
+
+                <div class ="mb-3" style = max-width: 250px>
+                    <label for="filterSelect" class="form-label">Filter reviews:</label>
+                    <select id="filterSelect" class="form-select">
+                        <option value ="all">All</option>
+                        <option value ="with_images">With images</option>
+                        <option value="5">5 Stars</option>  
+                        <option value="4">4 Stars</option>
+                        <option value="3">3 Stars</option>
+                        <option value="2">2 Stars</option>
+                        <option value="1">1 Star</option>
+                        <option value="newest">Newest</option>
+                        <option value="oldest">Oldest</option>
+                        <option value="highest">Highest rating</option>
+                        <option value="lowest">Lowest rating</option>
                 <table class="table">
                     <thead>
                         <tr>
@@ -150,6 +165,7 @@
 
     <script src="/js/login-form.js" defer></script>
     <script>
+        let reviewsData = [];
         const id = window.location.pathname.split('/').pop();
         
         async function loadReviews(id) {

@@ -5,23 +5,6 @@ async function checkLoginStatus() {
     const loginFormContainer = document.getElementById("loginFormContainer");
     const loginForm = document.getElementById("loginForm");
 
-    loginForm.addEventListener('submit', async(e) => {
-        e.preventDefault();
-
-        const formData = new FormData(loginForm);
-
-        const res = await fetch('/login', {
-            method: 'POST',
-            body: new URLSearchParams(formData)
-        });
-        
-        const data = await res.json();
-
-        if(data.error)
-            document.alert(data.error);
-        else
-            location.reload();
-    });
 
     if(data.loggedIn) {
         loginFormContainer.innerHTML = `
@@ -29,10 +12,10 @@ async function checkLoginStatus() {
         `;
 
         document.getElementById("logoutButton").addEventListener('click', async () => {
-            const res = await fetch('/logout');
-            const data = await res.json();
+            const logoutRes = await fetch('/logout');
+            const logoutData = await logoutRes.json();
 
-            if(data.loggedOut) {
+            if(logoutData.loggedOut) {
                 location.reload();
             } else {
                 document.alert("Logout failed");
@@ -40,5 +23,23 @@ async function checkLoginStatus() {
         });
     }
 }
+
+loginForm.addEventListener('submit', async(e) => {
+        e.preventDefault();
+
+        const formData = new FormData(loginForm);
+
+        const loginRes = await fetch('/login', {
+            method: 'POST',
+            body: new URLSearchParams(formData)
+        });
+        
+        const loginData = await loginRes.json();
+
+        if(loginData.error)
+            document.alert(loginData.error);
+        else
+            location.reload();
+    });
 
 checkLoginStatus();
