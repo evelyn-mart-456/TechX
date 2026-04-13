@@ -16,7 +16,6 @@
         <a class="techx-nav-link" href="/tech">Tech</a>
         <a class="techx-nav-link" href="/Review">Leave a review</a>
         <a class="techx-nav-link" href="/my-reviews">My reviews</a>
-        <a class="techx-nav-link" href="/shopping-cart">Shopping Cart</a>
         <a class="techx-nav-link" href="/purchase-history">Purchase History</a>
         <span></span>
         <div id="loginFormContainer" class="auth">
@@ -77,29 +76,32 @@
                         <th>Action</th>
                     </tr>
                 </thead>
-                <tbody id="cartTableBody">
-                </tbody>
+                <tbody id="cartTableBody"></tbody>
             `;
 
             const tbody = table.querySelector('#cartTableBody');
 
+
             items.forEach(item => {
-                const subtotal = item.price * item.quantity;
+                const quantity = Number(item.quantity);
+                const price = Number(item.price);
+                const subtotal = price * quantity;
                 total += subtotal;
 
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td>${item.name}</td>
-                    <td>$${item.price.toFixed(2)}</td>
+                    <td>$${price.toFixed(2)}</td>
                     <td>
-                        <input type="number" class="form-control" value="${item.quantity}" min="1" onchange="updateQuantity(${item.id}, this.value)">
+                        <input type="number" class="form-control" value="${quantity}" min="1" onchange="updateQuantity(${item.productId}, this.value)">
                     </td>
                     <td>$${subtotal.toFixed(2)}</td>
                     <td>
-                        <button class="btn btn-danger btn-sm" onclick="removeItem(${item.id})">Remove</button>
+                        <button class="btn btn-danger btn-sm" onclick="removeItem(${item.productId})">Remove</button>
                     </td>
                 `;
                 tbody.appendChild(row);
+                console.log("Cart item:", item);
             });
 
             cartContainer.innerHTML = '';

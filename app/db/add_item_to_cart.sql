@@ -1,2 +1,2 @@
-INSERT INTO ShoppingCartItems (CartID, ProductID, Quantity, PriceAtAdd)
+INSERT INTO cartitem (CartID, ProductID, Quantity, PriceAtAdd)
 VALUES (?, ?, ?, ?)
