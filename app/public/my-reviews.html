@@ -118,6 +118,12 @@
         <textarea id="edit-text" rows="4" required></textarea>
       </label>
 
+      <label>
+        Review image (optional):
+        <input id="edit-image" type="file" accept="image/*">
+        <div id="current-image-container" style="margin-top: 10px;"></div>
+      </label>
+
       <button id="save-edit">Save changes</button>
       <button id="cancel-edit" type="button">Cancel</button>
     </div>
@@ -184,6 +190,7 @@
           <h3>${review.ProductName || 'Unknown product'}</h3>
           <p><strong>Rating:</strong> ${review.Rating}</p>
           <p>${review.ProductReview || ''}</p>
+          ${review.Image ? `<img src="/review-images/${review.Image}" alt="Review image" style="max-width: 200px; max-height: 200px;">` : ''}
           <div class="actions">
             <button type="button" data-id="${review.ReviewID}" class="edit-btn">Edit</button>
             <button type="button" data-id="${review.ReviewID}" class="delete-btn">Delete</button>
@@ -235,6 +242,13 @@
       document.getElementById('edit-product').value = review.ProductName || '';
       document.getElementById('edit-rating').value = review.Rating;
       document.getElementById('edit-text').value = review.ProductReview;
+      document.getElementById('edit-image').value = ''; // Clear file input
+      const currentImageContainer = document.getElementById('current-image-container');
+      if (review.Image) {
+        currentImageContainer.innerHTML = `<p>Current image:</p><img src="/review-images/${review.Image}" alt="Current review image" style="max-width: 200px; max-height: 200px;">`;
+      } else {
+        currentImageContainer.innerHTML = '<p>No image uploaded</p>';
+      }
       document.getElementById('edit-error').style.display = 'none';
       document.getElementById('edit-success').style.display = 'none';
       document.getElementById('edit-panel').style.display = 'block';
@@ -279,7 +293,28 @@
       }
 
       try {
-        const result = await apiPut(`/api/update_review/${editingReviewId}`, { review_text, rating });
+        const formData = new FormData();
+        formData.append('review_text', review_text);
+        formData.append('rating', rating);
+        const imageFile = document.getElementById('edit-image').files[0];
+        if (imageFile) {
+          formData.append('review_image', imageFile);
+        } else {
+          // If no new image, keep existing
+          const currentImage = document.querySelector('#current-image-container img');
+          if (currentImage) {
+            const imageSrc = currentImage.src;
+            const imageName = imageSrc.split('/').pop();
+            formData.append('existing_image', imageName);
+          }
+        }
+
+        const res = await fetch(`/api/update_review/${editingReviewId}`, {
+          method: 'PUT',
+          body: formData
+        });
+        const result = await res.json();
+
         if (result.success) {
           document.getElementById('edit-success').textContent = 'Review updated successfully.';
           document.getElementById('edit-success').style.display = 'block';

@@ -1,2 +1,6 @@
-INSERT INTO Post('PostID', 'Body', 'Title', 'PostCreated', 'UserID')
-VALUES (?, ?, ?, ?, ?);
+INSERT INTO ThreadPost (
+    UserID,
+    ThreadID,
+    CreationDate,
+    Text
+) VALUES (?, ?, NOW(), ?);
