@@ -801,6 +801,8 @@ app.post("/createarticle", (req, res) => {
     fs.writeFileSync("articles.json", JSON.stringify(articles, null, 2));
 
     res.json({ success: true });
+});
+
 app.get('/moderators', requireStaff, (req, res) => {
     db.query(get_moderators_sql, [], (err, moderators) => {
         if(err) {
