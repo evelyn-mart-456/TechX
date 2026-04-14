@@ -109,25 +109,87 @@
         </div>
         <div class="row mt-4">
             <div class="col">
-                <div class="card">
-                <div class="card-header h5 mb-0 fw-bold">Product Discussion</div>
-                <div class="card-body">
-                    <form id="createThreadForm" method="POST" hidden>
-                        <input type="text" name="title" class="form-control mb-2" /><textarea class="form-control mb-2" name="message"></textarea><input type="submit" value="Submit" class="btn btn-primary" />
-                    </form>
+                <div class="card shadow-sm mb-3">
+                <div class="card-header mb-0 text-white" style="background: linear-gradient(135deg, #3b5bdb, #5f3dc4)">
+                    <span class="h5 fw-bold">Reviews</span>
+                    <select id="reviewSortSelect" class="form-select form-select-sm float-end w-auto">
+                        <option value="high">Highest Rating</option>
+                        <option value="low">Lowest Rating</option>
+                    </select>
                 </div>
-                <div class="px-3 pb-3">
-                    <table class="table">
-                    <thead>
-                        <tr>
-                            <th class="w-100">Topics</th><th class="text-nowrap align-middle">Replies</th><th class="text-nowrap">Last Post</th>
-                        </tr>
-                    </thead>
-                    <tbody id="productThreads">
+                    <div class="card-body">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>
+                                        Review
+                                    </th>
+                                    <th>
+                                        Rating
+                                    </th>
+                                    <th>
+                                        User
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody id="productReviews">
+                                <tr id="addReviewRow">
+                                    <td>
+                                        <textarea class="form-control" id="reviewTextarea" name="review" required></textarea>
+                                    </td>
+                                    <td>
+                                        <input class="form-control" id="ratingInput" name="rating" type="number" placeholder="Rating (1-5)" min="1" max="5" required>
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-primary" id="submitReview">Submit Review</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <p id="submitError"></p>
 
-                    </tbody>
-                </table>
+                        <div class="px-3 pb-3" id="reviewPagination">
+
+                        </div>
+                    </div>
                 </div>
+            </div>
+        </div>
+        <div class="row mt-4">
+            <div class="col">
+                <div class="card shadow-sm mb-3">
+                    <div class="card-header mb-0 text-white" style="background: linear-gradient(135deg, #3b5bdb, #5f3dc4)">
+                        <span class="h5 fw-bold">Product Discussion</span>
+                        <select id="threadSortSelect" class="form-select form-select-sm float-end w-auto">
+                            <option value="latest_post">Latest Post</option>
+                            <option value="oldest_post">Oldest Post</option>
+                            <option value="replies_asc">Fewest Replies</option>
+                            <option value="replies_desc">Most Replies</option>
+                            <option value="latest">Newest Thread</option>
+                            <option value="oldest">Oldest Thread</option>
+                        </select>
+                    </div>
+                    <div class="card-body">
+                        <div id="createThreadLabel" class="small fw-semibold mb-2" hidden>Start a new topic:</div>
+                        <form id="createThreadForm" method="POST" class="border rounded-3 p-3 bg-body-tertiary" hidden>
+                            <input type="text" name="title" class="form-control mb-2" /><input type="submit" value="Submit" class="btn btn-primary" />
+                        </form>
+                    </div>
+                    <div class="px-3 pb-3">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th class="w-100">Topics</th><th class="text-nowrap align-middle">Replies</th><th class="text-nowrap">Last Post</th>
+                                </tr>
+                            </thead>
+                            <tbody id="productThreads">
+
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="px-3 pb-3" id="threadPagination">
+
+                    </div>
                 </div>
             </div>
         </div>
@@ -168,12 +230,147 @@
     </div>
 
     <script src="/js/login-form.js" defer></script>
+    <script src="/js/post-editor.js"></script>
     <script>
         let allReviews = [];
         const id = window.location.pathname.split('/').pop();
+
+        let maxThreads = 5;
+        let maxReviews = 10;
+
+        const params = new URLSearchParams(window.location.search);
         
+        const DEFAULTS = {
+            thread_sort: "latest_post",
+            thread_page: 1,
+            review_sort: "high",
+            review_page: 1
+        };
+
+        const state = {
+            thread_page: Number(params.get("thread_page")) || 1,
+            review_page: Number(params.get("review_page")) || 1,
+            thread_sort: params.get("thread_sort") || "latest_post",
+            review_sort: params.get("review_sort") || "high"
+        };
+
+        const reviewSortSelect = document.getElementById("reviewSortSelect");
+        reviewSortSelect.value = state.review_sort;
+
+        reviewSortSelect.addEventListener("change", (e) => {
+            const value = e.target.value;
+
+            state.review_sort = value;
+            state.review_page = 1;
+
+            history.replaceState(null, "", `/product/${id}${buildQuery(state)}`);
+            loadReviews();
+        });
+
+        const threadSortSelect = document.getElementById("threadSortSelect");
+        threadSortSelect.value = state.thread_sort;
+
+        threadSortSelect.addEventListener("change", (e) => {
+            const value = e.target.value;
+
+            state.thread_sort = value;
+            state.thread_page = 1;
+
+            history.replaceState(null, "", `/product/${id}${buildQuery(state)}`);
+            loadPosts();
+        });
+
+        function buildQuery(params) {
+            const search = new URLSearchParams();
+
+            Object.entries(params).forEach(([key, value]) => {
+                if(String(value) !== String(DEFAULTS[key]))
+                    search.set(key, value);
+            });
+
+            const query = search.toString();
+
+            return query ? `?${query}` : "";
+        }
+
+        function getLink(params) {
+            return `/product/${id}${buildQuery(params)}`;
+        }
+
+        function buildPagination(num, max, page, pageKey) {
+            const totalPages = Math.ceil(num / max);
+
+            if(totalPages <= 1) return document.createElement("div");
+
+            const pageDiv = document.createElement('div');
+
+            pageDiv.className = "text-center mt-2";
+
+            let html = '';
+
+            if(totalPages <= 5) {
+                for(let i=1; i<=totalPages; i++) {
+                    let htmlFragment = ''
+                    if(i === page) {
+                        htmlFragment = `<span class="fw-bold">${i}</span>`;
+                    } else {
+                        htmlFragment = `<a href="${getLink({...state, [pageKey]: i})}" class="text-decoration-none fw-semibold">${i}</a>`;
+                    }
+
+                    if(i !== totalPages)
+                        html += htmlFragment + ' ';
+                    else
+                        html += htmlFragment;
+                }
+            } else {
+                let start = page - 2;
+                let end = page + 2;
+
+                if(page !== 1) {
+                    html += `<a href="${getLink({...state, [pageKey]: 1})}" class="text-decoration-none"><<</a> `
+                    html += `<a href="${getLink({...state, [pageKey]: page - 1})}" class="text-decoration-none"><</a> `;
+                }
+                
+                if(start < 1) {
+                    start = 1;
+                    end = start + 4;
+                }
+
+                if(end > totalPages) {
+                    end = totalPages;
+                    start = totalPages - 4;
+                }
+
+                for(let i=start; i<=end; i++) {
+                    let htmlFragment = ''
+                    if(i === page) {
+                        htmlFragment = `<span class="fw-bold">${i}</span>`;
+                    } else {
+                        htmlFragment = `<a href="${getLink({...state, [pageKey]: i})}" class="text-decoration-none fw-semibold">${i}</a>`;
+                    }
+
+                    if(i !== end)
+                        html += htmlFragment + ' ';
+                    else
+                        html += htmlFragment;
+                }
+
+                if(page !== totalPages) {
+                    html += ` <a href="${getLink({...state, [pageKey]: page+1})}" class="text-decoration-none">></a> `;
+                    html+=  ` <a href="${getLink({...state, [pageKey]: totalPages})}" class="text-decoration-none">>></a> `;
+                }
+            }
+
+            pageDiv.innerHTML = html;
+
+            return pageDiv;
+        }
+
         async function loadReviews(id, filter = 'all') {
             const reviewTable = document.getElementById("productReviews");
+
+            reviewTable.querySelectorAll("tr:not(#addReviewRow)").forEach(row => row.remove());
+
             const addReviewRow = document.getElementById("addReviewRow");
             const averageRatingEl = document.getElementById("averageRating");
 
@@ -208,6 +405,10 @@
                 `;
                 reviewTable.insertBefore(row, addReviewRow);
             });
+
+            let reviewsPagination = buildPagination(reviews.length, maxReviews, state.review_page, "review_page");
+            document.getElementById("reviewPagination").innerHTML = '';
+            document.getElementById("reviewPagination").appendChild(reviewsPagination);
         }
 
         async function getSession() {
@@ -217,54 +418,91 @@
             return session;
         }
 
-        async function loadPosts(id) {
+        let selectedThread = null;
+
+        async function loadPosts() {
             const session = await getSession();
 
             const res = await fetch(`/threads/${id}`);
             const data = await res.json();
 
             const createThreadForm = document.getElementById("createThreadForm");
+            const createThreadLabel = document.getElementById("createThreadLabel");
 
             if(session.loggedIn) {
                 createThreadForm.hidden = false;
                 createThreadForm.action = `/product/${id}/thread`;
+                createThreadLabel.hidden = false;
+                if(!createThreadForm.querySelector("textarea")) {
+                    const postEditor = buildPostEditor();
+                    const submitBtn = createThreadForm.querySelector("input[type='submit']");
+
+                    submitBtn.before(postEditor.root);
+                }
             }
 
             const threadTable = document.getElementById("productThreads");
+            threadTable.innerHTML = '';
 
-            data.forEach(thread => {
+            const threads = data;
+
+            switch(state.thread_sort) {
+                case "latest":
+                    threads.sort((a, b) => new Date(b.CreationDate) - new Date(a.CreationDate));
+                    break;
+                case "oldest":
+                    threads.sort((a, b) => new Date(a.CreationDate) - new Date(b.CreationDate));
+                    break;
+                case "replies_asc":
+                    threads.sort((a, b) => Number(a.Replies) - Number(b.Replies));
+                    break;
+                case "replies_desc":
+                    threads.sort((a, b) => Number(b.Replies) - Number(a.Replies));
+                    break;
+                case "oldest_post":
+                    threads.sort((a, b) => new Date(a.LastPostDate) - new Date(b.LastPostDate));
+                    break;
+                case "latest_post":
+                    threads.sort((a, b) => new Date(b.LastPostDate) - new Date(a.LastPostDate));
+                    break;
+                default:
+                    break;
+            }
+
+            const start = (Number(state.thread_page) - 1) * maxThreads;
+            const threadsSlice = threads.slice(start, Math.min(start+maxThreads, threads.length));
+
+            threadsSlice.forEach(thread => {
                 const threadRow = document.createElement("tr");
                 
                 threadRow.innerHTML = `
                     <td>
-                        <div><a href="/product/${thread.ProductID}/thread/${thread.ThreadID}">${thread.Title}</a>
+                        <div><a class="fs-5 text-decoration-none fw-semibold" href="/product/${thread.ProductID}/thread/${thread.ThreadID}">${thread.Title}</a>
                         ${
                             (session.moderatedBoards && session.moderatedBoards.includes(Number(id))) || thread.CreatorID === session.userID ?
-                            `<button class="btn btn-link p-0 ms-1 edit-title-btn" data-thread-id="${thread.ThreadID}" title="Edit">
+                            `<button class="btn btn-link p-0 ms-1 edit-title-btn text-muted" data-thread-id="${thread.ThreadID}" title="Edit">
                                 <i class="bi bi-pencil-square"></i>
                             </button>
-                            <button class="btn btn-link p-0 ms-1 delete-btn" data-thread-id="${thread.ThreadID}" title="Delete">
+                            <button class="btn btn-link p-0 ms-1 delete-btn text-muted" data-thread-id="${thread.ThreadID}" title="Delete">
                                 <i class="bi bi-trash"></i>
                             </button>
                             `
                             : '' 
                         }
                         </div>
-                        <div>by ${thread.CreatorName} on ${new Date(thread.CreationDate).toLocaleString()}</div>
+                        <div>by <span class="fw-semibold">${thread.CreatorName}</span> on <span class="text-muted">${new Date(thread.CreationDate).toLocaleString()}</span></div>
                     </td>
                     <td class="align-middle text-center">${thread.Replies}</td>
                     <td class="text-nowrap">
-                        <div>by ${thread.LastPosterName}</div>
-                        <div>${new Date(thread.LastPostDate).toLocaleString()}</div>
+                        <div>by <span class="fw-semibold">${thread.LastPosterName}</span></div>
+                        <div><span class="text-muted">${new Date(thread.LastPostDate).toLocaleString()}</span></div>
                     </td>
                 `;
 
                 threadTable.appendChild(threadRow);
             });
 
-            let selectedThread = null;
-
-            document.querySelectorAll('.edit-title-btn').forEach(btn => {
+            threadTable.querySelectorAll('.edit-title-btn').forEach(btn => {
                 btn.addEventListener('click', event => {
                     selectedThread = btn.dataset.threadId;
 
@@ -273,7 +511,7 @@
                 })
             });
 
-            document.querySelectorAll('.delete-btn').forEach(btn => {
+            threadTable.querySelectorAll('.delete-btn').forEach(btn => {
                 btn.addEventListener('click', event => {
                     selectedThread = btn.dataset.threadId;
 
@@ -282,33 +520,37 @@
                 })
             });
 
-            document.getElementById('confirmDeleteBtn').addEventListener('click', () => {
-                if (!selectedThread) return;
-
-                fetch(`/product/${id}/thread/${selectedThread}`, { method: 'DELETE' })
-                    .then(() => location.reload());
-            });
-
-            const editTitleText = document.getElementById("editTitleText");
-
-            document.getElementById('confirmEditBtn').addEventListener('click', () => {
-                if(!selectedThread) return;
-
-                const formData = new FormData();
-
-                formData.append("title", editTitleText.value);
-
-                editTitleText.value = "";
-
-                fetch(`/product/${id}/thread/${selectedThread}`, { 
-                    method: 'PATCH',
-                    body: new URLSearchParams(formData) 
-                })
-                    .then(() => location.reload());
-            });
+            let threadPagination = buildPagination(threads.length, maxThreads, state.thread_page, "thread_page");
+            document.getElementById("threadPagination").innerHTML = '';
+            document.getElementById("threadPagination").appendChild(threadPagination);
         }
 
-        loadPosts(id);
+        loadPosts();
+
+        document.getElementById('confirmDeleteBtn').addEventListener('click', () => {
+            if (!selectedThread) return;
+
+            fetch(`/product/${id}/thread/${selectedThread}`, { method: 'DELETE' })
+                .then(() => location.reload());
+        });
+
+        const editTitleText = document.getElementById("editTitleText");
+
+        document.getElementById('confirmEditBtn').addEventListener('click', () => {
+            if(!selectedThread) return;
+
+            const formData = new FormData();
+
+            formData.append("title", editTitleText.value);
+
+            editTitleText.value = "";
+
+            fetch(`/product/${id}/thread/${selectedThread}`, { 
+                method: 'PATCH',
+                body: new URLSearchParams(formData) 
+            })
+                .then(() => location.reload());
+        });
 
         async function loadProduct() {
             const res = await fetch(`/products/${id}`);
