@@ -1,2 +1,2 @@
-DELETE FROM ThreadPost
+DELETE FROM Post
 WHERE PostID = ?;

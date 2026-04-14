@@ -1,1 +1,0 @@
-INSERT INTO BoardModerators (UserID, ProductID) VALUES ?;

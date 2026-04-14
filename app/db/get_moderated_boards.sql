@@ -1,1 +1,0 @@
-SELECT ProductID FROM BoardModerators WHERE UserID = ?;

@@ -18,29 +18,12 @@
     border-radius: 15px;
     box-shadow: 0 8px 20px rgba(0,0,0,0.1);
   }
- .container {
-  display: flex;
-  justify-content: center;
-  gap: 40px;
-}
-.poll {
-  width: 300px;
-  background: white;
-  padding: 20px;
-  border-radius: 15px;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.1);
-  margin: 20px auto; /* centers it */
-}
-#userPolls {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-.center-section {
-  display: flex;
-  justify-content: center;
-  margin-top: 20px;
-}
+
+  .container {
+    display: flex;
+    justify-content: space-between;
+    padding: 40px;
+  }
 </style>
 </head>
 <body>
@@ -52,8 +35,6 @@
         <a class="techx-nav-link" href="/Polls.html">Polls</a>
         <a class="techx-nav-link" href="/tech">Tech</a>
         <a class="techx-nav-link" href="/Review">Leave a review</a>
-        <a class="techx-nav-link" href="/my-reviews">My reviews</a>
-        <a class="techx-nav-link" href="/shopping-cart">Shopping Cart</a
         <span></span>
         <div id="loginFormContainer" class="auth">
           <form id="loginForm" class="techx-nav-form">
@@ -100,23 +81,8 @@
   </form>
   <div id="fatherResults"></div>
 </div>
- <div class="center-section">
-  <div class="poll">
-  <h3>Create Your Own Poll</h3>
-
-  <input type="text" id="newQuestion" placeholder="Enter your question"><br><br>
-
-  <input type="text" class="newOption" placeholder="Option 1"><br>
-  <input type="text" class="newOption" placeholder="Option 2"><br>
-  <input type="text" class="newOption" placeholder="Option 3"><br><br>
-
-  <button onclick="createPoll()">Create Poll</button>
-</div>
-</div>
-<hr>
-
-<div id="userPolls"></div>
- <script src="/js/login-form.js"></script>
+ </div>
+ <script src="/js/login-form.js" defer></script>
 <script>
 
 async function voteBrand(event){
@@ -182,86 +148,6 @@ async function loadResults(){
 }
 
 loadResults();
-
-async function loadUserPolls() {
-    const response = await fetch("/getpolls");
-    const data = await response.json();
-
-    let container = document.getElementById("userPolls");
-    container.innerHTML = "";
-
-    data.polls.forEach(poll => {
-        let html = `<div class="poll"><h3>${poll.question}</h3>`;
-
-        poll.options.forEach(opt => {
-            html += `
-                <button onclick="voteUserPoll('${poll.id}', '${opt.OptionID}')">
-                    ${opt.OptionName} (${opt.Votes})
-                </button><br>
-            `;
-        });
-
-        html += "</div><br>";
-        container.innerHTML += html;
-    });
-}
-
-async function voteUserPoll(pollId, optionId) {
-    const response = await fetch("/votepoll", {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({
-            PollID: pollId,
-            OptionID: optionId
-        })
-    });
-
-    await response.json();
-    loadUserPolls(); // refresh after voting
-}
-
-loadUserPolls();
-
-// Create poll function with correct try/catch
-    async function createPoll() {
-      const question = document.getElementById("newQuestion").value.trim();
-      const optionInputs = document.querySelectorAll(".newOption");
-      const options = [];
-
-      optionInputs.forEach(input => {
-        if (input.value.trim() !== "") options.push(input.value.trim());
-      });
-
-      if (!question || options.length < 2) {
-        alert("Enter a question and at least 2 options");
-        return;
-      }
-
-      try {
-       const response = await fetch("/createpoll", {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({ question, options })
-});
-
-        if (!response.ok) {
-          const errData = await response.json();
-          alert("Failed to create poll: " + (errData.error || "Unknown error"));
-          return;
-        }
-
-        const data = await response.json();
-        console.log("Poll created:", data);
-        alert("Poll created successfully!");
-        loadUserPolls();
-
-      } catch (err) {
-        console.error("Fetch error:", err);
-        alert("Failed to create poll: Network or server error");
-      }
-    }
-
-  
 
 </script>
 </body>

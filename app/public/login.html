@@ -87,14 +87,11 @@ button:hover {
     const data = await res.json();
 
     if(data.success) {
-      loginResult.textContent = 'Login successful! Redirecting...';
-      setTimeout(() => window.location.href = '/', 700);
-      return;
+      window.location.href = '/'
     }
 
-    if(data.error) {
+    if(data.error)
       loginResult.textContent = data.error;
-    }
   });
 </script>
 </body>

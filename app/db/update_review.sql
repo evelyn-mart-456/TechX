@@ -1,3 +1,3 @@
 UPDATE Reviews
-SET ProductReview = ?, Rating = ?, Image = ?
+SET ProductReview = ?, Rating = ?
 WHERE ReviewID = ? AND UserID = ?;
