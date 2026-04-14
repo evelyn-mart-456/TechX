@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html>
+<head>
+<link href="/css/style.css" rel="stylesheet">
+
+<title>Create Article</title>
+<style>
+.article {
+  width: 400px;
+  background: white;
+  padding: 20px;
+  border-radius: 15px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+  color: black;
+   
+  display: flex ;
+  flex-direction: column;
+  align-items: center;
+}
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: linear-gradient(to right, #19d7f8, #fd00da);
+}
+
+.techx-navbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 40px;
+}
+
+.techx-nav-right {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-left: auto;
+  padding: 4px;
+  border: 2px solid transparent;
+  border-radius: 20px;
+  background-image:
+    linear-gradient(#AFDBF5, #AFDBF5),
+    radial-gradient(circle at top left, #fd00da, #19d7f8);
+  background-origin: border-box;
+  background-clip: content-box, border-box;
+}
+
+.techx-nav-link {
+  display: inline-block;
+  padding: 10px 25px;
+  color: black;
+  text-decoration: none;
+}
+
+.techx-signup-btn {
+  display: inline-block;
+  padding: 10px 25px;
+  color: black;
+  text-decoration: none;
+  border-radius: 20px;
+  background: linear-gradient(to right, #fd00da, #19d7f8);
+}
+
+.techx-nav-form {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+}
+
+.techx-nav-form input,
+.logout-button {
+  padding: 6px 10px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+}
+
+.techx-nav-form input[type="text"],
+.techx-nav-form input[type="password"] {
+  width: 120px;
+}
+
+.techx-nav-form input[type="submit"],
+.logout-button {
+  cursor: pointer;
+  border: none;
+  color: black;
+  background: linear-gradient(to right, #fd00da, #19d7f8);
+  gap:4px;
+}
+
+.auth {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+</style>
+</head>
+<body>
+<div class="techx-navbar">
+      <img src="/Techx.png" width="150" height="100" alt="TechX logo">
+
+      <div class="techx-nav-right">
+        <a class="techx-nav-link" href="/home">Home</a>
+        <a class="techx-nav-link" href="/Polls.html">Polls</a>
+        <a class="techx-nav-link" href="/tech">Tech</a>
+        <a class="techx-nav-link" href="/Review">Leave a review</a>
+        <a class="techx-nav-link" href="/my-reviews">My reviews</a>
+        <a class="techx-nav-link" href="/News-Article.html">News Article</a>
+        <a class="techx-nav-link" href="/shopping-cart">Shopping Cart</a>
+        <span></span>
+        <div id="loginFormContainer" class="auth">
+          <form id="loginForm" class="techx-nav-form">
+            <input type="text" placeholder="username" name="username" required>
+            <input type="password" placeholder="password" name="password" required>
+            <input type="submit" value="Login">
+          </form>
+
+</div>
+</div>
+</div>
+<hr>
+<div id="articles"></div>
+<div class="article">
+<h3>Create Article</h3>
+<div>
+<input type="text" id="articleTitle" placeholder="Title"><br>
+<input type="text" id="articleAuthor" placeholder="Author"><br>
+<textarea id="articleContent" placeholder="Write your article..." rows="5"></textarea>
+<input type="file" id="articleImage" accept="image/*"><br>
+<button onclick="createArticle()">Post Article</button>
+</div>
+<script>
+async function createArticle() {
+    let title = document.getElementById("articleTitle").value;
+    let author = document.getElementById("articleAuthor").value;
+    let content = document.getElementById("articleContent").value;
+
+    if (!title || !author || !content) {
+        alert("Please fill all fields");
+        return;
+    }
+
+    const response = await fetch("/createarticle", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ title, author, content })
+    });
+
+    if (!response.ok) {
+        alert("Failed to create article");
+        return;
+    }
+
+    alert("Article posted!");
+    loadArticles();
+}
+
+async function loadArticles() {
+    const response = await fetch("/getarticles");
+    const data = await response.json();
+
+    let container = document.getElementById("articles");
+    if (!container) return;
+
+    container.innerHTML = "";
+
+    data.articles.forEach(article => {
+        container.innerHTML += `
+            <div class="article">
+                <h2>${article.title}</h2>
+                <p><strong>${article.author}</strong></p>
+                <p>${article.content}</p>
+            </div>
+        `;
+    });
+}
+
+loadArticles();
+</script>
+</body>
+</html>

@@ -16,6 +16,7 @@
         <a class="techx-nav-link" href="/Polls.html">Polls</a>
         <a class="techx-nav-link" href="/tech">Tech</a>
         <a class="techx-nav-link" href="/Review">Leave a review</a>
+         <a class="techx-nav-link" href="/shopping-cart">Shopping Cart</a>
         <span></span>
         <div id="loginFormContainer" class="auth">
           <form id="loginForm" class="techx-nav-form">
@@ -30,35 +31,81 @@
     </div>
 
     <div class="container bg-light flex-grow-1 mb-4">
-        <div class="row mt-4">
-            <div class="col">
-                <div class="card shadow-sm">
-                    <div class="card-body p-0">
-                        <div class="row g-0">
-                            <div class="col-md-6 bg-body-tertiary d-flex align-items-center justify-content-center p-4">
-                                <img id="productImg" class="img-fluid rounded" style="max-height: 600px; object-fit: contain;">
-                            </div>
+        <div class="row">
+            <div class="col-md-6 px-0">
+                <img id="productImg" class="img-fluid rounded-end" style="max-height: 600px; object-fit: contain;">
+            </div>
+            <div class="col-md-6 mt-4 d-flex flex-column">
+                <h1 id="productName" class="mb-2"></h1>
+                <p><a id="productCategory" class="badge text-bg-secondary text-decoration-none mb-3 d-inline-block"></a></p>
+                <p class="mb-0 mt-auto">
+                    <span id="retailPrice" class="fs-4 me-2 fw-bold"></span>
+                    <button id="addToCartBtn" class="btn btn-success me-2">Add to Cart</button>
+                    <a id="productLink" class="btn btn-primary">Visit Product Page</a>
+                </p>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col mt-4">
+                <p id="productDesc" class="text-muted"></p>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col mt-4">
+                <h3 id="averageRating" class="mb-3"></h3>
 
-                            <div class="col-md-6 d-flex">
-                                <div class="p-4 d-flex flex-column w-100">
-                                    <h1 id="productName" class="mb-2"></h1>
-                                    <p class="mb-3">
-                                        <a id="productCategory" class="badge text-bg-secondary text-decoration-none"></a>
-                                    </p>
-                                    <div class="mt-auto d-flex flex-wrap align-items-center gap-2">
-                                        <span id="retailPrice" class="fs-4 fw-bold"></span>
-                                        <a id="productLink" class="btn btn-primary">Visit Product Page</a>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="card-body border-top">
-                        <p id="productDesc" class="text-muted"></p>
-                    </div>
+                <div class ="mb-3" style = max-width:250px>
+                    <label for="filterSelect" class="form-label">Filter reviews:</label>
+                    <select id="filterSelect" class="form-select">
+                        <option value ="all">All</option>
+                        <option value ="with_images">With images</option>
+                        <option value="5">5 Stars</option>  
+                        <option value="4">4 Stars</option>
+                        <option value="3">3 Stars</option>
+                        <option value="2">2 Stars</option>
+                        <option value="1">1 Star</option>
+                        <option value="newest">Newest</option>
+                        <option value="oldest">Oldest</option>
+                        <option value="highest">Highest rating</option>
+                        <option value="lowest">Lowest rating</option>
+                    </select>
                 </div>
-            </div>            
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>
+                                Review
+                            </th>
+                            <th>
+                                Rating
+                            </th>
+                            <th>
+                                User
+                            </th>
+                            <th>
+                                Image
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody id="productReviews">
+                        <tr id="addReviewRow">
+                            <td>
+                                <textarea id="reviewTextarea" name="review" required></textarea>
+                            </td>
+                            <td>
+                                <input id="ratingInput" name="rating" type="number" placeholder="Rating (1-5)" min="1" max="5" required>
+                            </td>
+                            <td>
+                                <button id="submitReview">Submit Review</button>
+                            </td>
+                            <td>
+                                <input id="reviewImageInput" name="review_image" type="file" accept="image/*">
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p id="submitError"></p>
+            </div>
         </div>
         <div class="row mt-4">
             <div class="col">
@@ -185,6 +232,7 @@
     <script src="/js/login-form.js" defer></script>
     <script src="/js/post-editor.js"></script>
     <script>
+        let allReviews = [];
         const id = window.location.pathname.split('/').pop();
 
         let maxThreads = 5;
@@ -317,42 +365,44 @@
 
             return pageDiv;
         }
-        
-        async function loadReviews() {
-            const res = await fetch(`/api/Reviews/${id}`);
-            const data = await res.json();
 
+        async function loadReviews(id, filter = 'all') {
             const reviewTable = document.getElementById("productReviews");
 
             reviewTable.querySelectorAll("tr:not(#addReviewRow)").forEach(row => row.remove());
 
             const addReviewRow = document.getElementById("addReviewRow");
+            const averageRatingEl = document.getElementById("averageRating");
 
-            const reviews = data.reviews;
-
-            switch(state.review_sort) {
-                case "low":
-                    reviews.sort((a, b) => a.Rating - b.Rating);
-                    break;
-                case "high":
-                    reviews.sort((a, b) => b.Rating - a.Rating);
-                    break;
-                default:
-                    break;
+            if (filter === 'all' || !allReviews.length) {
+                const allRes = await fetch(`/api/Reviews/${id}`);
+                const allData = await allRes.json();
+                allReviews = allData.reviews || [];
             }
 
-            const start = (Number(state.review_page)-1) * maxReviews;
-            const reviewsSlice = reviews.slice(start, Math.min(start+maxReviews, reviews.length));
+            const url = filter && filter !== 'all' ? `/api/Reviews/${id}?filter=${encodeURIComponent(filter)}` : `/api/Reviews/${id}`;
+            const res = await fetch(url);
+            const data = await res.json();
+            const reviews = data.reviews || [];
 
-            reviewsSlice.forEach(review => {
+            if (allReviews.length > 0) {
+                const avg = allReviews.reduce((sum, review) => sum + Number(review.Rating), 0) / allReviews.length;
+                averageRatingEl.innerText = `Average Rating: ${avg.toFixed(1)} ⭐ (${allReviews.length} reviews)`;
+            } else {
+                averageRatingEl.innerText = "No reviews yet";
+            }
+
+            reviewTable.innerHTML = '';
+            reviewTable.appendChild(addReviewRow);
+
+            reviews.forEach(review => {
                 const row = document.createElement("tr");
-
                 row.innerHTML = `
-                    <td>${review.ProductReview}</td>
-                    <td>${review.Rating}</td>
-                    <td>${review.UserName}</td>
+                    <td>${review.ProductReview || ''}</td>
+                    <td>${review.Rating ?? ''}</td>
+                    <td>${review.Username || ''}</td>
+                    <td>${review.Image ? `<img src="/review-images/${review.Image}" alt="Review image" style="max-width: 100px; max-height: 100px;">` : ''}</td>
                 `;
-
                 reviewTable.insertBefore(row, addReviewRow);
             });
 
@@ -516,7 +566,33 @@
             document.getElementById("retailPrice").innerText = `$${product.RetailPrice}`;
             document.getElementById("productLink").href = product.ProductLink;
 
-            loadReviews();
+            const filterSelect = document.getElementById('filterSelect');
+            const reviewFilter = filterSelect?.value || 'all';
+            loadReviews(product.ProductID, reviewFilter);
+            filterSelect?.addEventListener('change', () => loadReviews(product.ProductID, filterSelect.value));
+
+            const addToCartBtn = document.getElementById('addToCartBtn');
+            addToCartBtn.addEventListener('click', async () => {
+                const sessionRes = await fetch('/api/session');
+                const session = await sessionRes.json();
+                if (!session.loggedIn) {
+                    alert('Please log in to add items to cart.');
+                    return;
+                }
+
+                const quantity = 1; // Default quantity
+                const addRes = await fetch('/api/cart', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ productId: product.ProductID, quantity })
+                });
+                const addData = await addRes.json();
+                if (addData.success) {
+                    alert('Item added to cart!');
+                } else {
+                    alert('Failed to add item to cart: ' + (addData.error || 'Unknown error'));
+                }
+            });
 
             const submitReview = document.getElementById("submitReview");
 
@@ -532,15 +608,19 @@
 
                 const review = document.getElementById("reviewTextarea").value;
                 const rating = document.getElementById("ratingInput").value;
+                const imageFile = document.getElementById("reviewImageInput").files[0];
 
                 const formData = new FormData();
                 formData.append("review_text", review);
                 formData.append("rating", rating);
                 formData.append("product_id", id);
+                if (imageFile) {
+                    formData.append("review_image", imageFile);
+                }
 
                 const res = await fetch('/submit_review', {
                     method: 'POST',
-                    body: new URLSearchParams(formData)
+                    body: formData
                 });
                 
                 const data = await res.json();
