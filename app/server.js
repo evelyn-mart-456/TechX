@@ -8,8 +8,6 @@ const dbConfig = require('./dbConfig');
 const fs = require('fs');
 const session = require('express-session');
 const multer = require('multer');
-const cors = require("cors");
-const { connect } = require('http2');
 
 // Loading sql files here
 const register_sql = fs.readFileSync('./db/create_user.sql', 'utf8');
@@ -1190,6 +1188,8 @@ app.post("/createpoll", (req, res) => {
         }))
     };
 
+    console.log('New poll: '+newPoll);
+
     polls.push(newPoll);
     res.json({ success: true, poll: newPoll });
 });
@@ -1236,6 +1236,7 @@ app.post("/createarticle", (req, res) => {
 
     res.json({ success: true });
 });
+
 app.get('/moderators', requireStaff, (req, res) => {
     db.query(get_moderators_sql, [], (err, moderators) => {
         if(err) {
