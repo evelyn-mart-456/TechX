@@ -1,2 +1,1 @@
-DELETE FROM cartitem
-WHERE CartID = ? AND ProductID = ?
+DELETE FROM cartitem WHERE CartID = ? AND ProductID = ?

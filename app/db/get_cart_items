@@ -1,4 +1,4 @@
-SELECT sci.ProductID, p.ProductName, p.RetailPrice AS Price, sci.Quantity, sci.PriceAtAdd
+SELECT sci.ProductID, p.ProductName, p.RetailPrice AS Price, p.ProductImage, sci.Quantity, sci.PriceAtAdd
 FROM cartitem sci
 JOIN Product p ON sci.ProductID = p.ProductID
 WHERE sci.CartID = ?

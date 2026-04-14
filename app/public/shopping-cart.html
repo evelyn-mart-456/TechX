@@ -36,6 +36,24 @@
             <!-- Cart items will be loaded here -->
         </div>
         <div class="mt-4">
+            <h3>Shipping Information</h3>
+            <form id="shippingForm" class="mb-4">
+                <div class="row">
+                    <div class="col-md-6">
+                        <label for="address" class="form-label">Address</label>
+                        <input type="text" class="form-control" id="address" required>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="city" class="form-label">City</label>
+                        <input type="text" class="form-control" id="city" required>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="zipCode" class="form-label">Zip Code</label>
+                        <input type="text" class="form-control" id="zipCode" required>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-secondary mt-2">Save Shipping Info</button>
+            </form>
             <h3>Total: $<span id="cartTotal">0.00</span></h3>
             <button id="checkoutBtn" class="btn btn-primary">Checkout</button>
         </div>
@@ -48,10 +66,17 @@
         async function loadCart() {
             try {
                 const response = await fetch('/api/cart');
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        document.getElementById('cartItems').innerHTML = '<p>You must be logged in to view your cart. <a href="/login">Login here</a></p>';
+                    }
+                    return;
+                }
                 const data = await response.json();
-                displayCart(data.items);
+                displayCart(data.items || []);
             } catch (error) {
                 console.error('Error loading cart:', error);
+                document.getElementById('cartItems').innerHTML = '<p>Error loading cart.</p>';
             }
         }
 
@@ -59,7 +84,7 @@
             const cartContainer = document.getElementById('cartItems');
             let total = 0;
 
-            if (items.length === 0) {
+            if (!items || items.length === 0) {
                 cartContainer.innerHTML = '<p>Your cart is empty.</p>';
                 return;
             }
@@ -69,6 +94,7 @@
             table.innerHTML = `
                 <thead>
                     <tr>
+                        <th>Image</th>
                         <th>Product</th>
                         <th>Price</th>
                         <th>Quantity</th>
@@ -90,6 +116,7 @@
 
                 const row = document.createElement('tr');
                 row.innerHTML = `
+                    <td><img src="/product-images/${item.image}" alt="${item.name}" style="max-width: 100px; max-height: 100px;"></td>
                     <td>${item.name}</td>
                     <td>$${price.toFixed(2)}</td>
                     <td>
@@ -131,6 +158,49 @@
             }
         }
 
+        async function loadShipping() {
+            try {
+                const response = await fetch('/api/shipping');
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        document.getElementById('shippingForm').innerHTML = '<p>You must be logged in to enter shipping information. <a href="/login">Login here</a></p>';
+                    }
+                    return;
+                }
+                const data = await response.json();
+                if (data.shipping) {
+                    document.getElementById('address').value = data.shipping.Address;
+                    document.getElementById('city').value = data.shipping.City;
+                    document.getElementById('zipCode').value = data.shipping.ZipCode;
+                }
+            } catch (error) {
+                console.error('Error loading shipping info:', error);
+            }
+        }
+
+        document.getElementById('shippingForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const address = document.getElementById('address').value;
+            const city = document.getElementById('city').value;
+            const zipCode = document.getElementById('zipCode').value;
+
+            try {
+                const response = await fetch('/api/shipping', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ address, city, zipCode })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    alert('Shipping information saved!');
+                } else {
+                    alert('Failed to save shipping information: ' + (data.error || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('Error saving shipping info:', error);
+            }
+        });
+
         document.getElementById('checkoutBtn').addEventListener('click', async () => {
             try {
                 const response = await fetch('/api/checkout', { method: 'POST' });
@@ -146,6 +216,7 @@
         });
 
         loadCart();
+        loadShipping();
     </script>
 </body>
 </html>

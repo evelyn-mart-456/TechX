@@ -1,3 +1,3 @@
 SELECT ShippingID, Address, City, ZipCode
-FROM shippingInformation
+FROM shippinginformation
 WHERE UserID = ?
