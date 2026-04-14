@@ -1,0 +1,1 @@
+DELETE FROM Thread WHERE ThreadID = ?;
