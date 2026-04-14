@@ -1,3 +1,3 @@
 SELECT CartID
-FROM ShoppingCart
+FROM shoppingcart
 WHERE UserID = ?

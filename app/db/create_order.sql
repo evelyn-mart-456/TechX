@@ -1,2 +1,2 @@
-INSERT INTO Orders (UserID, Total, ShippingID, CreatedAt)
+INSERT INTO orders (UserID, Total, ShippingID, CreatedAt)
 VALUES (?, ?, ?, NOW())

@@ -1,2 +1,2 @@
-INSERT INTO OrderItems (OrderID, ProductID, Quantity, Price)
+INSERT INTO orderitem (OrderID, ProductID, Quantity, Price)
 VALUES (?, ?, ?, ?)

@@ -1,2 +1,2 @@
-INSERT INTO ShoppingCart (UserID, CreatedAt, UpdatedAt)
+INSERT INTO shoppingcart (UserID, CreatedAt, UpdatedAt)
 VALUES (?, NOW(), NOW())

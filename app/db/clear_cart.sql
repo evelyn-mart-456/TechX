@@ -1,2 +1,2 @@
-DELETE FROM ShoppingCartItems
+DELETE FROM cartitem
 WHERE CartID = ?

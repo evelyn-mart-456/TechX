@@ -1,6 +1,6 @@
 const { v4: uuidv4 } = require('uuid');
 const express = require('express');
-const mysql = require('mysql2/promise'); // change this line
+const mysql = require('mysql2');
 const bodyParser = require('body-parser');
 const crypto = require('crypto');
 const path = require('path');
@@ -38,6 +38,9 @@ const delete_product_category_sql = fs.readFileSync('./db/delete_product_categor
 const create_review_sql = fs.readFileSync('./db/create_review.sql', 'utf8');
 const get_reviews_sql = fs.readFileSync('./db/get_reviews.sql', 'utf8');
 const get_reviews_by_product_sql = fs.readFileSync('./db/get_reviews_by_product.sql', 'utf8');
+const get_reviews_by_user_sql = fs.readFileSync('./db/get_reviews_by_user.sql', 'utf8');
+const update_review_sql = fs.readFileSync('./db/update_review.sql', 'utf8');
+const delete_review_sql = fs.readFileSync('./db/delete_review.sql', 'utf8');
 
 const get_moderators_sql = fs.readFileSync('./db/get_moderators.sql', 'utf8');
 const add_moderator_sql = fs.readFileSync('./db/add_moderator.sql', 'utf8');
@@ -51,6 +54,21 @@ const delete_thread_sql = fs.readFileSync('./db/delete_thread.sql', 'utf8');
 const create_post_sql = fs.readFileSync('./db/create_post.sql', 'utf8');
 const get_post_sql = fs.readFileSync('./db/get_post.sql', 'utf8');
 const delete_post_sql = fs.readFileSync('./db/delete_post.sql', 'utf8');
+
+const create_cart_sql = fs.readFileSync('./db/create_cart.sql', 'utf8');
+const get_cart_sql = fs.readFileSync('./db/get_cart.sql', 'utf8');
+const add_item_to_cart_sql = fs.readFileSync('./db/add_item_to_cart.sql', 'utf8');
+const get_cart_items_sql = fs.readFileSync('./db/get_cart_items', 'utf8');
+const update_cart_item_quantity_sql = fs.readFileSync('./db/update_cart_item_quantity.sql', 'utf8');
+const remove_item_from_cart_sql = fs.readFileSync('./db/remove_item_from_cart.sql', 'utf8');
+const clear_cart_sql = fs.readFileSync('./db/clear_cart.sql', 'utf8');
+
+const create_order_sql = fs.readFileSync('./db/create_order.sql', 'utf8');
+const add_order_item_sql = fs.readFileSync('./db/add_order_item.sql', 'utf8');
+const get_orders_by_user_sql = fs.readFileSync('./db/get_orders_by_user.sql', 'utf8');
+const get_order_items_sql = fs.readFileSync('./db/get_order_items.sql', 'utf8');
+const add_shipping_info_sql = fs.readFileSync('./db/add_shipping_info.sql', 'utf8');
+const get_shipping_info_sql = fs.readFileSync('./db/get_shipping_info.sql', 'utf8');
 
 const app = express();
 const port = 3000;
@@ -157,21 +175,31 @@ app.get('/Reviews', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'Reviews.html'));
 });
 
+app.get('/my-reviews', (req, res) => {
+    if(req.session.userId) {
+        res.sendFile(path.join(__dirname, 'public', 'my-reviews.html'));
+    } else {
+        res.redirect('/login');
+    }
+});
+
+app.get('/shopping-cart', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'shopping-cart.html'));
+});
+
+app.get('/purchase-history', (req, res) => {
+    if(req.session.userId) {
+        res.sendFile(path.join(__dirname, 'public', 'purchase-history.html'));
+    } else {
+        res.redirect('/login');
+    }
+});
+
 app.get('/api/session', (req, res) => {
     if(req.session.userId && req.session.username) {
-
-        db.query(get_moderated_boards_sql, [req.session.userId], (err, results) => {
-            if(err) {
-                console.error(err);
-                return res.status(500).send('Server error');
-            }
-
-            return res.json({
-                loggedIn: true,
-                username: req.session.username,
-                userID: req.session.userId,
-                moderatedBoards: req.session.moderatedBoards
-            });
+        return res.json({
+            loggedIn: true,
+            username: req.session.username
         });
     } else {
         return res.json({loggedIn: false});
@@ -191,8 +219,31 @@ app.get('/api/Reviews', (req, res) => {
 
 app.get('/api/Reviews/:id', (req, res) => {
     const id = req.params.id;
+    const filter = req.query.filter;
+    let query = get_reviews_by_product_sql.trim().replace(/;$/, '');
+    const params = [id];
+    let orderClause = '';
 
-    db.query(get_reviews_by_product_sql, [id], (err, results) => {
+    if (filter === 'with_images') {
+        query += ' AND Reviews.Image IS NOT NULL';
+    } else if (['1','2','3','4','5'].includes(filter)) {
+        query += ' AND Rating = ?';
+        params.push(filter);
+    } else if (filter === 'newest') {
+        orderClause = ' ORDER BY Reviews.ReviewID DESC';
+    } else if (filter === 'oldest') {
+        orderClause = ' ORDER BY Reviews.ReviewID ASC';
+    } else if (filter === 'highest') {
+        orderClause = ' ORDER BY Rating DESC';
+    } else if (filter === 'lowest') {
+        orderClause = ' ORDER BY Rating ASC';
+    }
+
+    if (orderClause) {
+        query += orderClause;
+    }
+
+    db.query(query, params, (err, results) => {
         if(err) {
             console.error('Database error:', err);
             return res.status(500).json({ success: false, message: err.message });
@@ -202,6 +253,385 @@ app.get('/api/Reviews/:id', (req, res) => {
     });
 });
 
+app.get('/api/my-reviews', (req, res) => {
+    if (!req.session.userId) {
+        return res.status(401).json({ success: false, message: 'You must be logged in to view your reviews.' });
+    }
+
+    db.query(get_reviews_by_user_sql, [req.session.userId], (err, results) => {
+        if (err) {
+            console.error('Database error:', err);
+            return res.status(500).json({ success: false, message: err.message });
+        }
+
+        res.json({ success: true, reviews: results });
+    });
+});
+
+app.delete('/api/delete_review/:id', (req, res) => {
+    if (!req.session.userId) {
+        return res.status(401).json({ success: false, message: 'Log in to delete review' });
+    }
+
+    db.query(delete_review_sql, [req.params.id, req.session.userId], (err, result) => {
+        if (err) {
+            console.error('Database error:', err);
+            return res.status(500).json({ success: false, message: err.message });
+        }
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ success: false, message: 'Review not found or not authorized' });
+        }
+        res.json({ success: true });
+    });
+});
+
+// Cart routes
+app.get('/api/cart', (req, res) => {
+    if (!req.session.userId) {
+        return res.status(401).json({ error: 'Not logged in' });
+    }
+
+    // First, get or create cart
+    db.query(get_cart_sql, [req.session.userId], (err, cartResults) => {
+        if (err) {
+            console.error('Database error:', err);
+            return res.status(500).json({ error: 'Server error' });
+        }
+
+        let cartId;
+        if (cartResults.length === 0) {
+            // Create cart
+            db.query(create_cart_sql, [req.session.userId], (err, createResult) => {
+                if (err) {
+                    console.error('Database error:', err);
+                    return res.status(500).json({ error: 'Server error' });
+                }
+                cartId = createResult.insertId;
+                getCartItems(cartId, res);
+            });
+        } else {
+            cartId = cartResults[0].CartID;
+            getCartItems(cartId, res);
+        }
+    });
+});
+
+function getCartItems(cartId, res) {
+    db.query(get_cart_items_sql, [cartId], (err, items) => {
+        if (err) {
+            console.error('Database error:', err);
+            return res.status(500).json({ error: 'Server error' });
+        }
+        const mappedItems = items.map(item => ({
+            productId: item.ProductID,
+            name: item.ProductName,
+            price: item.Price,
+            quantity: item.Quantity,
+            image: item.ProductImage
+        }));
+        res.json({ items: mappedItems });
+    });
+}
+
+app.post('/api/cart', (req, res) => {
+    if (!req.session.userId) {
+        return res.status(401).json({ error: 'Not logged in' });
+    }
+
+    const { productId, quantity } = req.body;
+    if (!productId || !quantity) {
+        return res.status(400).json({ error: 'Product ID and quantity required' });
+    }
+
+    // Get product price
+    db.query(get_product_sql, [productId], (err, productResults) => {
+        if (err) {
+            console.error('Database error:', err);
+            return res.status(500).json({ error: 'Server error' });
+        }
+        if (productResults.length === 0) {
+            return res.status(404).json({ error: 'Product not found' });
+        }
+        const price = productResults[0].RetailPrice;
+
+        // Get or create cart
+        db.query(get_cart_sql, [req.session.userId], (err, cartResults) => {
+            if (err) {
+                console.error('Database error:', err);
+                return res.status(500).json({ error: 'Server error' });
+            }
+
+            let cartId;
+            if (cartResults.length === 0) {
+                db.query(create_cart_sql, [req.session.userId], (err, createResult) => {
+                    if (err) {
+                        console.error('Database error:', err);
+                        return res.status(500).json({ error: 'Server error' });
+                    }
+                    cartId = createResult.insertId;
+                    addItemToCart(cartId, productId, quantity, price, res);
+                });
+            } else {
+                cartId = cartResults[0].CartID;
+                addItemToCart(cartId, productId, quantity, price, res);
+            }
+        });
+    });
+});
+
+function addItemToCart(cartId, productId, quantity, price, res) {
+    // First check if item already exists in cart
+    db.query("SELECT Quantity FROM cartitem WHERE CartID = ? AND ProductID = ?", [cartId, productId], (err, existing) => {
+        if (err) {
+            console.error('Database error:', err);
+            return res.status(500).json({ error: 'Server error' });
+        }
+
+        if (existing.length > 0) {
+            // Item exists, update quantity
+            const newQuantity = existing[0].Quantity + quantity;
+            db.query(update_cart_item_quantity_sql, [newQuantity, cartId, productId], (err, result) => {
+                if (err) {
+                    console.error('Database error:', err);
+                    return res.status(500).json({ error: 'Server error' });
+                }
+                res.json({ success: true });
+            });
+        } else {
+            // Item doesn't exist, add new
+            db.query(add_item_to_cart_sql, [cartId, productId, quantity, price], (err, result) => {
+                if (err) {
+                    console.error('Database error:', err);
+                    return res.status(500).json({ error: 'Server error' });
+                }
+                res.json({ success: true });
+            });
+        }
+    });
+}
+
+app.put('/api/cart/:productId', (req, res) => {
+    if (!req.session.userId) {
+        return res.status(401).json({ error: 'Not logged in' });
+    }
+
+    const productId = req.params.productId;
+    const { quantity } = req.body;
+
+    db.query(get_cart_sql, [req.session.userId], (err, cartResults) => {
+        if (err) {
+            console.error('Database error:', err);
+            return res.status(500).json({ error: 'Server error' });
+        }
+        if (cartResults.length === 0) {
+            return res.status(404).json({ error: 'Cart not found' });
+        }
+        const cartId = cartResults[0].CartID;
+        db.query(update_cart_item_quantity_sql, [quantity, cartId, productId], (err, result) => {
+            if (err) {
+                console.error('Database error:', err);
+                return res.status(500).json({ error: 'Server error' });
+            }
+            res.json({ success: true });
+        });
+    });
+});
+
+app.delete('/api/cart/:productId', (req, res) => {
+    if (!req.session.userId) {
+        return res.status(401).json({ error: 'Not logged in' });
+    }
+
+    const productId = req.params.productId;
+
+    db.query(get_cart_sql, [req.session.userId], (err, cartResults) => {
+        if (err) {
+            console.error('Database error:', err);
+            return res.status(500).json({ error: 'Server error' });
+        }
+        if (cartResults.length === 0) {
+            return res.status(404).json({ error: 'Cart not found' });
+        }
+        const cartId = cartResults[0].CartID;
+
+        db.query(remove_item_from_cart_sql, [cartId, productId], (err, result) => {
+            if (err) {
+                console.error('Database error:', err);
+                return res.status(500).json({ error: 'Server error' });
+            }
+            res.json({ success: true });
+        });
+    });
+});
+
+app.get('/api/shipping', (req, res) => {
+    if (!req.session.userId) {
+        return res.status(401).json({ error: 'Not logged in' });
+    }
+
+    db.query(get_shipping_info_sql, [req.session.userId], (err, results) => {
+        if (err) {
+            console.error('Database error:', err);
+            return res.status(500).json({ error: 'Server error' });
+        }
+        if (results.length > 0) {
+            res.json({ shipping: results[0] });
+        } else {
+            res.json({ shipping: null });
+        }
+    });
+});
+
+app.post('/api/shipping', (req, res) => {
+    if (!req.session.userId) {
+        return res.status(401).json({ error: 'Not logged in' });
+    }
+
+    const { address, city, zipCode } = req.body;
+    if (!address || !city || !zipCode) {
+        return res.status(400).json({ error: 'Address, city, and zip code are required' });
+    }
+
+    // Check if shipping info already exists for user
+    db.query(get_shipping_info_sql, [req.session.userId], (err, existing) => {
+        if (err) {
+            console.error('Database error:', err);
+            return res.status(500).json({ error: 'Server error' });
+        }
+
+        if (existing.length > 0) {
+            // Update existing
+            db.query("UPDATE shippinginformation SET Address = ?, City = ?, ZipCode = ? WHERE UserID = ?",
+                     [address, city, zipCode, req.session.userId], (err, result) => {
+                if (err) {
+                    console.error('Database error:', err);
+                    return res.status(500).json({ error: 'Server error' });
+                }
+                res.json({ success: true });
+            });
+        } else {
+            // Insert new
+            db.query(add_shipping_info_sql, [req.session.userId, address, city, zipCode], (err, result) => {
+                if (err) {
+                    console.error('Database error:', err);
+                    return res.status(500).json({ error: 'Server error' });
+                }
+                res.json({ success: true });
+            });
+        }
+    });
+});
+
+app.post('/api/checkout', (req, res) => {
+    if (!req.session.userId) {
+        return res.status(401).json({ error: 'Not logged in' });
+    }
+
+    // Check if shipping info exists
+    db.query(get_shipping_info_sql, [req.session.userId], (err, shippingResults) => {
+        if (err) {
+            console.error('Database error:', err);
+            return res.status(500).json({ error: 'Server error' });
+        }
+        if (shippingResults.length === 0) {
+            return res.status(400).json({ error: 'Shipping information required before checkout' });
+        }
+        const shippingId = shippingResults[0].ShippingID;
+
+        // Get cart
+        db.query(get_cart_sql, [req.session.userId], (err, cartResults) => {
+            if (err) {
+                console.error('Database error:', err);
+                return res.status(500).json({ error: 'Server error' });
+            }
+            if (cartResults.length === 0) {
+                return res.status(400).json({ error: 'Cart is empty' });
+            }
+            const cartId = cartResults[0].CartID;
+
+            // Get cart items to calculate total and create order items
+            db.query(get_cart_items_sql, [cartId], (err, cartItems) => {
+                if (err) {
+                    console.error('Database error:', err);
+                    return res.status(500).json({ error: 'Server error' });
+                }
+                if (cartItems.length === 0) {
+                    return res.status(400).json({ error: 'Cart is empty' });
+                }
+
+                // Calculate total
+                const total = cartItems.reduce((sum, item) => sum + (item.Price * item.Quantity), 0);
+
+                // Create order
+                db.query(create_order_sql, [req.session.userId, total, shippingId], (err, orderResult) => {
+                    if (err) {
+                        console.error('Database error:', err);
+                        return res.status(500).json({ error: 'Server error' });
+                    }
+                    const orderId = orderResult.insertId;
+
+                    // Insert order items
+                    const orderItemPromises = cartItems.map(item =>
+                        new Promise((resolve, reject) => {
+                            db.query(add_order_item_sql, [orderId, item.ProductID, item.Quantity, item.Price], (err) => {
+                                if (err) reject(err);
+                                else resolve();
+                            });
+                        })
+                    );
+
+                    Promise.all(orderItemPromises)
+                        .then(() => {
+                            // Clear cart
+                            db.query(clear_cart_sql, [cartId], (err) => {
+                                if (err) {
+                                    console.error('Database error:', err);
+                                    return res.status(500).json({ error: 'Server error' });
+                                }
+                                res.json({ success: true, orderId });
+                            });
+                        })
+                        .catch(err => {
+                            console.error('Database error:', err);
+                            res.status(500).json({ error: 'Server error' });
+                        });
+                });
+            });
+        });
+    });
+});
+
+app.get('/api/orders', (req, res) => {
+    if (!req.session.userId) {
+        return res.status(401).json({ error: 'Not logged in' });
+    }
+
+    db.query(get_orders_by_user_sql, [req.session.userId], (err, orders) => {
+        if (err) {
+            console.error('Database error:', err);
+            return res.status(500).json({ error: 'Server error' });
+        }
+
+        // Get order items for each order
+        const orderPromises = orders.map(order =>
+            new Promise((resolve, reject) => {
+                db.query(get_order_items_sql, [order.OrderID], (err, items) => {
+                    if (err) reject(err);
+                    else resolve({ ...order, items });
+                });
+            })
+        );
+
+        Promise.all(orderPromises)
+            .then(ordersWithItems => {
+                res.json({ orders: ordersWithItems });
+            })
+            .catch(err => {
+                console.error('Database error:', err);
+                res.status(500).json({ error: 'Server error' });
+            });
+    });
+});
 
 app.post('/register', (req, res) => {
     const username = req.body.username;
@@ -231,10 +661,12 @@ app.post('/register', (req, res) => {
 });
 
 app.post('/login', (req, res) => {
+    
+
     const username = req.body.username;
     const hashedPassword = crypto.createHash('sha256').update(req.body.password).digest('hex');
 
-    db.query(get_user_sql, [username, hashedPassword], (err, results) => {
+    db.query(get_user_sql, [username], (err, results) => {
         if(err) {
             console.error(err);
             return res.status(500).send('Server error');
@@ -655,7 +1087,7 @@ app.post('/submit_review', uploadReviewImg.fields([{ name: 'review_image', maxCo
     console.log('req.body:', req.body);
     console.log('req.files:', req.files);
     const reviewID = crypto.randomUUID();
-    const prod = req.body.product_id;
+    const prodId = req.body.product_id;
     const rating = req.body.rating;
     const review = req.body.review_text;
     const imagePath = req.files?.review_image?.[0]?.filename || null;
@@ -717,9 +1149,10 @@ const {review_text, rating} = req.body;
 const reviewId = req.params.id;
 const imagePath = req.files?.review_image?.[0]?.filename || req.body.existing_image || null;
 //validate rating
-if(rating < 1 || rating > 5) {
+if (rating < 1 || rating > 5) {
     return res.status(400).json({ success: false, message: 'invalid rating' });
 }
+
 db.query(update_review_sql, [review_text, rating, imagePath, reviewId, req.session.userId], (err, result) => {
     if (err) {
         console.error(err);
@@ -730,7 +1163,7 @@ db.query(update_review_sql, [review_text, rating, imagePath, reviewId, req.sessi
     }
     res.json({ success: true, message: 'Review updated' });
 });
-
+});
 
 const polls = []; // In-memory storage
 
@@ -801,6 +1234,7 @@ app.post("/createarticle", (req, res) => {
     fs.writeFileSync("articles.json", JSON.stringify(articles, null, 2));
 
     res.json({ success: true });
+});
 app.get('/moderators', requireStaff, (req, res) => {
     db.query(get_moderators_sql, [], (err, moderators) => {
         if(err) {
@@ -897,10 +1331,10 @@ app.get('/product/:pid/posts/:tid', (req, res) => {
     });
 });
 
-app.listen(port, () => {
-    console.log(`Express server running at http://localhost:${port}/`);
-});
-
 app.get("/getarticles", (req, res) => {
     res.json({ articles });
+});
+
+app.listen(port, () => {
+    console.log(`Express server running at http://localhost:${port}/`);
 });

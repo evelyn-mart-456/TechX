@@ -1,2 +1,2 @@
-INSERT INTO shippingInformation (UserID, Address, City, ZipCode)
+INSERT INTO shippinginformation (UserID, Address, City, ZipCode)
 VALUES (?, ?, ?, ?)
