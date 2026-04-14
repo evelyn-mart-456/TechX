@@ -61,8 +61,6 @@ button:hover {
         <a class="techx-nav-link" href="/Polls.html">Polls</a>
         <a class="techx-nav-link" href="/tech">Tech</a>
         <a class="techx-nav-link" href="/Review">Leave a review</a>
-         <a class="techx-nav-link" href="/shopping-cart">Shopping Cart</a>
-         <a class="techx-nav-link" href="/purchase-history">Purchase History</a>
         <span></span>
         <div id="loginFormContainer" class="auth">
           <form id="loginForm" class="techx-nav-form">
@@ -102,7 +100,6 @@ button:hover {
           <h3>${review.ProductName}</h3>
           <p>Rating: ${review.Rating}</p>
           <p>${review.ProductReview}</p>
-          ${review.Image ? `<img src="/review-images/${review.Image}" alt="Review image" style="max-width: 200px; max-height: 200px;">` : ''}
           <hr>
         </div>
         `;

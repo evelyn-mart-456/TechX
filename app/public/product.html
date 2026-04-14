@@ -3,7 +3,6 @@
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link href="/css/style.css" rel="stylesheet">
     
 </head>
@@ -16,7 +15,6 @@
         <a class="techx-nav-link" href="/Polls.html">Polls</a>
         <a class="techx-nav-link" href="/tech">Tech</a>
         <a class="techx-nav-link" href="/Review">Leave a review</a>
-         <a class="techx-nav-link" href="/shopping-cart">Shopping Cart</a>
         <span></span>
         <div id="loginFormContainer" class="auth">
           <form id="loginForm" class="techx-nav-form">
@@ -39,9 +37,7 @@
                 <h1 id="productName" class="mb-2"></h1>
                 <p><a id="productCategory" class="badge text-bg-secondary text-decoration-none mb-3 d-inline-block"></a></p>
                 <p class="mb-0 mt-auto">
-                    <span id="retailPrice" class="fs-4 me-2 fw-bold"></span>
-                    <button id="addToCartBtn" class="btn btn-success me-2">Add to Cart</button>
-                    <a id="productLink" class="btn btn-primary">Visit Product Page</a>
+                    <span id="retailPrice" class="fs-4 me-2 fw-bold"></span><a id="productLink" class="btn btn-primary">Visit Product Page</a>
                 </p>
             </div>
         </div>
@@ -52,24 +48,6 @@
         </div>
         <div class="row">
             <div class="col mt-4">
-                <h3 id="averageRating" class="mb-3"></h3>
-
-                <div class ="mb-3" style = max-width:250px>
-                    <label for="filterSelect" class="form-label">Filter reviews:</label>
-                    <select id="filterSelect" class="form-select">
-                        <option value ="all">All</option>
-                        <option value ="with_images">With images</option>
-                        <option value="5">5 Stars</option>  
-                        <option value="4">4 Stars</option>
-                        <option value="3">3 Stars</option>
-                        <option value="2">2 Stars</option>
-                        <option value="1">1 Star</option>
-                        <option value="newest">Newest</option>
-                        <option value="oldest">Oldest</option>
-                        <option value="highest">Highest rating</option>
-                        <option value="lowest">Lowest rating</option>
-                    </select>
-                </div>
                 <table class="table">
                     <thead>
                         <tr>
@@ -81,9 +59,6 @@
                             </th>
                             <th>
                                 User
-                            </th>
-                            <th>
-                                Image
                             </th>
                         </tr>
                     </thead>
@@ -98,217 +73,37 @@
                             <td>
                                 <button id="submitReview">Submit Review</button>
                             </td>
-                            <td>
-                                <input id="reviewImageInput" name="review_image" type="file" accept="image/*">
-                            </td>
                         </tr>
                     </tbody>
                 </table>
                 <p id="submitError"></p>
             </div>
         </div>
-        <div class="row mt-4">
-            <div class="col">
-                <div class="card">
-                <div class="card-header h5 mb-0 fw-bold">Product Discussion</div>
-                <div class="card-body">
-                    <form id="createThreadForm" method="POST" hidden>
-                        <input type="text" name="title" class="form-control mb-2" /><textarea class="form-control mb-2" name="message"></textarea><input type="submit" value="Submit" class="btn btn-primary" />
-                    </form>
-                </div>
-                <div class="px-3 pb-3">
-                    <table class="table">
-                    <thead>
-                        <tr>
-                            <th class="w-100">Topics</th><th class="text-nowrap align-middle">Replies</th><th class="text-nowrap">Last Post</th>
-                        </tr>
-                    </thead>
-                    <tbody id="productThreads">
-
-                    </tbody>
-                </table>
-                </div>
-                </div>
-            </div>
-        </div>
     </div>
-
-    <div class="modal fade" id="confirmDeleteModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Confirm Delete</h5>
-            </div>
-            <div class="modal-body">
-                Are you sure you want to delete this thread? This action cannot be reversed
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="cancelDeleteBtn">Cancel</button>
-                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Delete</button>
-            </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="modal fade" id="editTitleModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Edit Title</h5>
-            </div>
-            <div class="modal-body">
-                <input type="text" class="form-control" id="editTitleText">
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" id="confirmEditBtn">Confirm</button>
-            </div>
-            </div>
-        </div>
-    </div>
-
     <script src="/js/login-form.js" defer></script>
     <script>
-        let allReviews = [];
         const id = window.location.pathname.split('/').pop();
         
-        async function loadReviews(id, filter = 'all') {
+        async function loadReviews(id) {
+            const res = await fetch(`/api/Reviews/${id}`);
+            const data = await res.json();
+
             const reviewTable = document.getElementById("productReviews");
             const addReviewRow = document.getElementById("addReviewRow");
-            const averageRatingEl = document.getElementById("averageRating");
 
-            if (filter === 'all' || !allReviews.length) {
-                const allRes = await fetch(`/api/Reviews/${id}`);
-                const allData = await allRes.json();
-                allReviews = allData.reviews || [];
-            }
 
-            const url = filter && filter !== 'all' ? `/api/Reviews/${id}?filter=${encodeURIComponent(filter)}` : `/api/Reviews/${id}`;
-            const res = await fetch(url);
-            const data = await res.json();
-            const reviews = data.reviews || [];
-
-            if (allReviews.length > 0) {
-                const avg = allReviews.reduce((sum, review) => sum + Number(review.Rating), 0) / allReviews.length;
-                averageRatingEl.innerText = `Average Rating: ${avg.toFixed(1)} ⭐ (${allReviews.length} reviews)`;
-            } else {
-                averageRatingEl.innerText = "No reviews yet";
-            }
-
-            reviewTable.innerHTML = '';
-            reviewTable.appendChild(addReviewRow);
-
-            reviews.forEach(review => {
+            data.reviews.forEach(review => {
                 const row = document.createElement("tr");
+
                 row.innerHTML = `
-                    <td>${review.ProductReview || ''}</td>
-                    <td>${review.Rating ?? ''}</td>
-                    <td>${review.Username || ''}</td>
-                    <td>${review.Image ? `<img src="/review-images/${review.Image}" alt="Review image" style="max-width: 100px; max-height: 100px;">` : ''}</td>
+                    <td>${review.ProductReview}</td>
+                    <td>${review.Rating}</td>
+                    <td>${review.UserName}</td>
                 `;
+
                 reviewTable.insertBefore(row, addReviewRow);
             });
         }
-
-        async function getSession() {
-            const res = await fetch('/api/session');
-            const session = await res.json();
-
-            return session;
-        }
-
-        async function loadPosts(id) {
-            const session = await getSession();
-
-            const res = await fetch(`/threads/${id}`);
-            const data = await res.json();
-
-            const createThreadForm = document.getElementById("createThreadForm");
-
-            if(session.loggedIn) {
-                createThreadForm.hidden = false;
-                createThreadForm.action = `/product/${id}/thread`;
-            }
-
-            const threadTable = document.getElementById("productThreads");
-
-            data.forEach(thread => {
-                const threadRow = document.createElement("tr");
-                
-                threadRow.innerHTML = `
-                    <td>
-                        <div><a href="/product/${thread.ProductID}/thread/${thread.ThreadID}">${thread.Title}</a>
-                        ${
-                            (session.moderatedBoards && session.moderatedBoards.includes(Number(id))) || thread.CreatorID === session.userID ?
-                            `<button class="btn btn-link p-0 ms-1 edit-title-btn" data-thread-id="${thread.ThreadID}" title="Edit">
-                                <i class="bi bi-pencil-square"></i>
-                            </button>
-                            <button class="btn btn-link p-0 ms-1 delete-btn" data-thread-id="${thread.ThreadID}" title="Delete">
-                                <i class="bi bi-trash"></i>
-                            </button>
-                            `
-                            : '' 
-                        }
-                        </div>
-                        <div>by ${thread.CreatorName} on ${new Date(thread.CreationDate).toLocaleString()}</div>
-                    </td>
-                    <td class="align-middle text-center">${thread.Replies}</td>
-                    <td class="text-nowrap">
-                        <div>by ${thread.LastPosterName}</div>
-                        <div>${new Date(thread.LastPostDate).toLocaleString()}</div>
-                    </td>
-                `;
-
-                threadTable.appendChild(threadRow);
-            });
-
-            let selectedThread = null;
-
-            document.querySelectorAll('.edit-title-btn').forEach(btn => {
-                btn.addEventListener('click', event => {
-                    selectedThread = btn.dataset.threadId;
-
-                    const modal = new bootstrap.Modal(document.getElementById('editTitleModal'));
-                    modal.show();
-                })
-            });
-
-            document.querySelectorAll('.delete-btn').forEach(btn => {
-                btn.addEventListener('click', event => {
-                    selectedThread = btn.dataset.threadId;
-
-                    const modal = new bootstrap.Modal(document.getElementById('confirmDeleteModal'));
-                    modal.show();
-                })
-            });
-
-            document.getElementById('confirmDeleteBtn').addEventListener('click', () => {
-                if (!selectedThread) return;
-
-                fetch(`/product/${id}/thread/${selectedThread}`, { method: 'DELETE' })
-                    .then(() => location.reload());
-            });
-
-            const editTitleText = document.getElementById("editTitleText");
-
-            document.getElementById('confirmEditBtn').addEventListener('click', () => {
-                if(!selectedThread) return;
-
-                const formData = new FormData();
-
-                formData.append("title", editTitleText.value);
-
-                editTitleText.value = "";
-
-                fetch(`/product/${id}/thread/${selectedThread}`, { 
-                    method: 'PATCH',
-                    body: new URLSearchParams(formData) 
-                })
-                    .then(() => location.reload());
-            });
-        }
-
-        loadPosts(id);
 
         async function loadProduct() {
             const res = await fetch(`/products/${id}`);
@@ -324,33 +119,7 @@
             document.getElementById("retailPrice").innerText = `$${product.RetailPrice}`;
             document.getElementById("productLink").href = product.ProductLink;
 
-            const filterSelect = document.getElementById('filterSelect');
-            const reviewFilter = filterSelect?.value || 'all';
-            loadReviews(product.ProductID, reviewFilter);
-            filterSelect?.addEventListener('change', () => loadReviews(product.ProductID, filterSelect.value));
-
-            const addToCartBtn = document.getElementById('addToCartBtn');
-            addToCartBtn.addEventListener('click', async () => {
-                const sessionRes = await fetch('/api/session');
-                const session = await sessionRes.json();
-                if (!session.loggedIn) {
-                    alert('Please log in to add items to cart.');
-                    return;
-                }
-
-                const quantity = 1; // Default quantity
-                const addRes = await fetch('/api/cart', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ productId: product.ProductID, quantity })
-                });
-                const addData = await addRes.json();
-                if (addData.success) {
-                    alert('Item added to cart!');
-                } else {
-                    alert('Failed to add item to cart: ' + (addData.error || 'Unknown error'));
-                }
-            });
+            loadReviews(product.ProductID);
 
             const submitReview = document.getElementById("submitReview");
 
@@ -366,19 +135,15 @@
 
                 const review = document.getElementById("reviewTextarea").value;
                 const rating = document.getElementById("ratingInput").value;
-                const imageFile = document.getElementById("reviewImageInput").files[0];
 
                 const formData = new FormData();
                 formData.append("review_text", review);
                 formData.append("rating", rating);
                 formData.append("product_id", id);
-                if (imageFile) {
-                    formData.append("review_image", imageFile);
-                }
 
                 const res = await fetch('/submit_review', {
                     method: 'POST',
-                    body: formData
+                    body: new URLSearchParams(formData)
                 });
                 
                 const data = await res.json();

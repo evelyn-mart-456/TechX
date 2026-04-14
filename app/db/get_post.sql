@@ -1,1 +1,2 @@
-SELECT * FROM ThreadPost WHERE PostID = ?;
+SELECT PostID, Body, Title, PostCreated, UserID FROM Post
+WHERE PostID = ?;

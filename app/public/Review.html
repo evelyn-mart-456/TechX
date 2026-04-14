@@ -77,13 +77,12 @@
   <div class="center-wrapper">
     <div class="review-container">
         <h2>Create Your Review</h2>
-        <form id = "reviewForm" enctype="multipart/form-data"> Create your review here
-        <select name="product_id" required>
+        <form id = "reviewForm"> Create your review here
+        <select name="product_name" required>
           <option value="">Select a product</option>
         </select>
         <input name="rating" type="number" placeholder="Rating (1-5)" min="1" max="5" required>
         <input name="review_text" type="text" placeholder="Your Review">
-        <input name="review_image" type="file" accept="image/*">
         <button type = "submit">Submit Review</button>
         </form>
     </div>
@@ -97,7 +96,7 @@
     .then(res => res.json())
     .then(data => {
       if (data.success) {
-        const select = document.querySelector('select[name="product_id"]');
+        const select = document.querySelector('select[name="product_name"]');
         data.products.forEach(product => {
           const option = document.createElement('option');
           option.value = product.ProductID;
@@ -115,7 +114,7 @@
     const formData = new FormData(event.target);
     const rating = parseInt(formData.get('rating'));
 
-    if(!formData.get('product_id') || !rating || rating < 1 || rating > 5) {
+    if(!formData.get('product_name') || !rating || rating < 1 || rating > 5) {
       alert('Please fill in all required fields and ensure rating is between 1 and 5.');
       return; 
     }
@@ -125,7 +124,12 @@
     try {
       const res = await fetch('/submit_review', {
         method: 'POST',
-        body: formData
+        headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              product_id: formData.get('product_name'),
+              review_text: formData.get('review_text'),
+              rating: rating
+            })
       });
 
       const data = await res.json();

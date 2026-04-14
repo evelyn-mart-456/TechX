@@ -5,20 +5,20 @@ async function checkLoginStatus() {
     const loginFormContainer = document.getElementById("loginFormContainer");
     const loginForm = document.getElementById("loginForm");
 
-loginForm.addEventListener('submit', async(e) => {
+    loginForm.addEventListener('submit', async(e) => {
         e.preventDefault();
 
         const formData = new FormData(loginForm);
 
-        const loginRes = await fetch('/login', {
+        const res = await fetch('/login', {
             method: 'POST',
             body: new URLSearchParams(formData)
         });
         
-        const loginData = await loginRes.json();
+        const data = await res.json();
 
-        if(loginData.error)
-            alert(loginData.error);
+        if(data.error)
+            document.alert(data.error);
         else
             location.reload();
     });
@@ -29,17 +29,16 @@ loginForm.addEventListener('submit', async(e) => {
         `;
 
         document.getElementById("logoutButton").addEventListener('click', async () => {
-            const logoutRes = await fetch('/logout');
-            const logoutData = await logoutRes.json();
+            const res = await fetch('/logout');
+            const data = await res.json();
 
-            if(logoutData.loggedOut) {
+            if(data.loggedOut) {
                 location.reload();
             } else {
-                alert("Logout failed");
+                document.alert("Logout failed");
             }
         });
     }
 }
-
 
 checkLoginStatus();
