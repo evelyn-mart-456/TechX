@@ -1,6 +1,6 @@
 const { v4: uuidv4 } = require('uuid');
 const express = require('express');
-const mysql = require('mysql2/promise'); // change this line
+const mysql = require('mysql2'); // change this line
 const bodyParser = require('body-parser');
 const crypto = require('crypto');
 const path = require('path');
@@ -8,7 +8,7 @@ const dbConfig = require('./dbConfig');
 const fs = require('fs');
 const session = require('express-session');
 const multer = require('multer');
-const cors = require("cors");
+
 // Loading sql files here
 const register_sql = fs.readFileSync('./db/create_user.sql', 'utf8');
 const get_user_sql = fs.readFileSync('./db/get_user.sql', 'utf8');
@@ -643,6 +643,8 @@ app.post("/createpoll", (req, res) => {
             Votes: 0
         }))
     };
+
+    console.log('New poll: '+newPoll);
 
     polls.push(newPoll);
     res.json({ success: true, poll: newPoll });
