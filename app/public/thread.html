@@ -98,6 +98,8 @@
             const totalPages = Math.ceil(numPosts / pageSize);
             const pageDiv = document.createElement('div');
 
+            if(totalPages <= 1) return pageDiv;
+
             let html = '';
 
             if(totalPages <= 5) {
