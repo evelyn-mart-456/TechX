@@ -1,4 +1,4 @@
-SELECT OrderID, Total, ShippingID, CreatedAt
+SELECT OrderID, OrderNumber, Total, ShippingID, CreatedAt
 FROM orders
 WHERE UserID = ?
-ORDER BY CreatedAt DESC
+ORDER BY CreatedAt DESC;
