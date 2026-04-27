@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <link href="/css/style.css" rel="stylesheet">
 <style>
   .poll {
@@ -44,25 +47,41 @@
 </style>
 </head>
 <body>
-  <div class="techx-navbar">
+  <div class="navbar navbar-expand-lg d-flex align-items-center justify-content-between px-4 py-3">
       <img src="/Techx.png" width="150" height="100" alt="TechX logo">
-
-      <div class="techx-nav-right">
-        <a class="techx-nav-link" href="/home">Home</a>
-        <a class="techx-nav-link" href="/Polls.html">Polls</a>
-        <a class="techx-nav-link" href="/tech">Tech</a>
-        <a class="techx-nav-link" href="/Review">Leave a review</a>
-        <a class="techx-nav-link" href="/my-reviews">My reviews</a>
-        <a class="techx-nav-link" href="/shopping-cart">Shopping Cart</a
-        <span></span>
-        <div id="loginFormContainer" class="auth">
-          <form id="loginForm" class="techx-nav-form">
-            <input type="text" placeholder="username" name="username" required>
-            <input type="password" placeholder="password" name="password" required>
-            <input type="submit" value="Login">
-          </form>
-
-          <a class="techx-signup-btn" href="/signup.html">Sign Up</a>
+      <button class="navbar-toggler ms-auto techx-toggler" 
+              type="button" 
+              data-bs-toggle="collapse" 
+              data-bs-target="#techxNav" 
+              aria-controls="techxNav" 
+              aria-expanded="false" 
+              aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div id="techxNav" class="collapse navbar-collapse">
+        <div class="techx-nav-right position-relative d-flex flex-column flex-lg-row align-items-center gap-1 gap-xl-3 ms-auto py-4 px-1 rounded-4">
+          <div class="d-flex flex-column flex-lg-row align-items-center gap-1 gap-xl-3">
+            <a class="nav-link px-2 py-2 text-dark" href="/home">Home</a>
+            <a class="nav-link px-2 py-2 text-dark" href="/Polls.html">Polls</a>
+            <a class="nav-link px-2 py-2 text-dark" href="/tech">Tech</a>
+            <a class="nav-link px-2 py-2 text-dark" href="/Review">Leave a review</a>
+            <a class="nav-link px-2 py-2 text-dark" href="/my-reviews">My reviews</a>
+            <a class="nav-link px-2 py-2 text-dark" href="/News-Article.html">News Article</a>
+            <a class="nav-link px-2 py-2 text-dark" href="/purchase-history">Purchase History</a>
+            <a class="nav-link px-2 py-2 text-dark" href="/shopping-cart"><span class="d-flex align-items-center justify-content-center rounded-circle bg-white">🛒</span></a>
+          </div>
+          <div id="loginFormContainer" class="d-flex align-items-center">
+            <form id="loginForm" class="d-flex flex-row align-items-center gap-1 gap-xl-2 m-0">
+              <input class="form-control form-control-sm rounded techx-nav-input" type="text" placeholder="username" name="username" required>
+              <input class="form-control form-control-sm rounded techx-nav-input" type="password" placeholder="password" name="password" required>
+              <input class="btn btn-sm rounded-3 techx-gradient-btn" type="submit" value="Login">
+              <a class="btn btn-sm px-3 py-1 rounded-pill techx-gradient-btn" href="/signup.html">Sign Up</a>
+            </form>
+          </div>
+          <div id="loginError"
+               class="text-danger position-absolute end-0 pe-3 text-nowrap"
+               style="bottom: 0rem;">
+          </div>
         </div>
       </div>
     </div>
@@ -264,5 +283,6 @@ loadUserPolls();
   
 
 </script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
 </body>
 </html>

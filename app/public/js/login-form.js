@@ -16,16 +16,17 @@ loginForm.addEventListener('submit', async(e) => {
         });
         
         const loginData = await loginRes.json();
+        const loginError = document.getElementById("loginError");
 
         if(loginData.error)
-            alert(loginData.error);
+            loginError.innerText = loginData.error;
         else
             location.reload();
     });
 
     if(data.loggedIn) {
         loginFormContainer.innerHTML = `
-            <span>Hello, ${data.username}!</span><button class="logout-button" id="logoutButton">Logout</button>
+            <span>Hello, ${data.username}!</span><button class="logout-button btn btn-sm px-3 py-1 rounded-pill techx-gradient-btn ms-2" id="logoutButton">Logout</button>
         `;
 
         document.getElementById("logoutButton").addEventListener('click', async () => {

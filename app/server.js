@@ -1207,11 +1207,6 @@ app.post("/votepoll", (req, res) => {
     res.json({ results: poll.options });
 });
 
-const PORT = 3000;
-app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
-
-
-
 let articles = [];
 
 // Load existing articles
