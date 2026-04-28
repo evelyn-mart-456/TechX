@@ -74,14 +74,30 @@ function prependSelection(textarea, symbol) {
 
     const selectedText = textarea.value.slice(start, end);
 
-    const first = textarea.value.slice(0, start);
-    const last = textarea.value.slice(end);
+    const lineStart = textarea.value.lastIndexOf("\n", start - 1) + 1;
 
-    textarea.value = first + symbol + selectedText + last;
-    textarea.selectionStart = start + symbol.length;
-    textarea.selectionEnd = end + symbol.length;
+    if(textarea.value.slice(lineStart, start).includes(symbol)) {
+        const symbolStart = lineStart + textarea.value.slice(lineStart).indexOf(symbol);
+        const symbolEnd = symbolStart + symbol.length;
 
-    textarea.focus();
+        const first = textarea.value.slice(0, symbolStart);
+        const last = textarea.value.slice(symbolEnd);
+
+        textarea.value = first + last;
+        textarea.selectionStart -= symbol.length;
+        textarea.selectionEnd -= symbol.length;
+
+        textarea.focus();
+    } else {
+        const first = textarea.value.slice(0, start);
+        const last = textarea.value.slice(end);
+
+        textarea.value = first + symbol + selectedText + last;
+        textarea.selectionStart = start + symbol.length;
+        textarea.selectionEnd = end + symbol.length;
+
+        textarea.focus();
+    }
 }
 
 function wrapSelection(textarea, symbol) {
