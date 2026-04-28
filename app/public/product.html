@@ -127,54 +127,6 @@
         <div class="row mt-4">
             <div class="col">
                 <div class="card shadow-sm mb-3">
-                <div class="card-header mb-0 text-white" style="background: linear-gradient(135deg, #3b5bdb, #5f3dc4)">
-                    <span class="h5 fw-bold">Reviews</span>
-                    <select id="reviewSortSelect" class="form-select form-select-sm float-end w-auto">
-                        <option value="high">Highest Rating</option>
-                        <option value="low">Lowest Rating</option>
-                    </select>
-                </div>
-                    <div class="card-body">
-                        <table class="table">
-                            <thead>
-                                <tr>
-                                    <th>
-                                        Review
-                                    </th>
-                                    <th>
-                                        Rating
-                                    </th>
-                                    <th>
-                                        User
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody id="productReviews">
-                                <tr id="addReviewRow">
-                                    <td>
-                                        <textarea class="form-control" id="reviewTextarea" name="review" required></textarea>
-                                    </td>
-                                    <td>
-                                        <input class="form-control" id="ratingInput" name="rating" type="number" placeholder="Rating (1-5)" min="1" max="5" required>
-                                    </td>
-                                    <td>
-                                        <button class="btn btn-primary" id="submitReview">Submit Review</button>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                        <p id="submitError"></p>
-
-                        <div class="px-3 pb-3" id="reviewPagination">
-
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="row mt-4">
-            <div class="col">
-                <div class="card shadow-sm mb-3">
                     <div class="card-header mb-0 text-white" style="background: linear-gradient(135deg, #3b5bdb, #5f3dc4)">
                         <span class="h5 fw-bold">Product Discussion</span>
                         <select id="threadSortSelect" class="form-select form-select-sm float-end w-auto">
@@ -270,19 +222,6 @@
             thread_sort: params.get("thread_sort") || "latest_post",
             review_sort: params.get("review_sort") || "high"
         };
-
-        const reviewSortSelect = document.getElementById("reviewSortSelect");
-        reviewSortSelect.value = state.review_sort;
-
-        reviewSortSelect.addEventListener("change", (e) => {
-            const value = e.target.value;
-
-            state.review_sort = value;
-            state.review_page = 1;
-
-            history.replaceState(null, "", `/product/${id}${buildQuery(state)}`);
-            loadReviews();
-        });
 
         const threadSortSelect = document.getElementById("threadSortSelect");
         threadSortSelect.value = state.thread_sort;
@@ -422,10 +361,6 @@
                 `;
                 reviewTable.insertBefore(row, addReviewRow);
             });
-
-            let reviewsPagination = buildPagination(reviews.length, maxReviews, state.review_page, "review_page");
-            document.getElementById("reviewPagination").innerHTML = '';
-            document.getElementById("reviewPagination").appendChild(reviewsPagination);
         }
 
         async function getSession() {

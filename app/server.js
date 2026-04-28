@@ -198,9 +198,19 @@ app.get('/purchase-history', (req, res) => {
 
 app.get('/api/session', (req, res) => {
     if(req.session.userId && req.session.username) {
-        return res.json({
-            loggedIn: true,
-            username: req.session.username
+
+        db.query(get_moderated_boards_sql, [req.session.userId], (err, results) => {
+            if(err) {
+                console.error(err);
+                return res.status(500).send('Server error');
+            }
+
+            return res.json({
+                loggedIn: true,
+                username: req.session.username,
+                userID: req.session.userId,
+                moderatedBoards: req.session.moderatedBoards
+            });
         });
     } else {
         return res.json({loggedIn: false});
