@@ -4,6 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>My Reviews</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <link href="/css/style.css" rel="stylesheet">
   <style>
     .center-wrapper {
@@ -82,14 +84,42 @@
 </head>
 <body>
 
-  <div class="techx-navbar">
+  <div class="navbar navbar-expand-lg d-flex align-items-center justify-content-between px-4 py-3">
     <img src="/Techx.png" width="150" height="100" alt="TechX logo">
-    <div class="techx-nav-right">
-      <a class="techx-nav-link" href="/home">Home</a>
-      <a class="techx-nav-link" href="/Polls.html">Polls</a>
-      <a class="techx-nav-link" href="/tech">Tech</a>
-      <a class="techx-nav-link" href="/Review">Leave a review</a>
-      <a class="techx-nav-link" href="/my-reviews">My reviews</a>
+    <button class="navbar-toggler ms-auto techx-toggler" 
+            type="button" 
+            data-bs-toggle="collapse" 
+            data-bs-target="#techxNav" 
+            aria-controls="techxNav" 
+            aria-expanded="false" 
+            aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div id="techxNav" class="collapse navbar-collapse">
+      <div class="techx-nav-right position-relative d-flex flex-column flex-lg-row align-items-center gap-1 gap-xl-3 ms-auto py-4 px-1 rounded-4">
+        <div class="d-flex flex-column flex-lg-row align-items-center gap-1 gap-xl-3">
+          <a class="nav-link px-2 py-2 text-dark" href="/home">Home</a>
+          <a class="nav-link px-2 py-2 text-dark" href="/Polls.html">Polls</a>
+          <a class="nav-link px-2 py-2 text-dark" href="/tech">Tech</a>
+          <a class="nav-link px-2 py-2 text-dark" href="/Review">Leave a review</a>
+          <a class="nav-link px-2 py-2 text-dark" href="/my-reviews">My reviews</a>
+          <a class="nav-link px-2 py-2 text-dark" href="/News-Article.html">News Article</a>
+          <a class="nav-link px-2 py-2 text-dark" href="/purchase-history">Purchase History</a>
+          <a class="nav-link px-2 py-2 text-dark" href="/shopping-cart"><span class="d-flex align-items-center justify-content-center rounded-circle bg-white">🛒</span></a>
+        </div>
+        <div id="loginFormContainer" class="d-flex align-items-center">
+          <form id="loginForm" class="d-flex flex-row align-items-center gap-1 gap-xl-2 m-0">
+            <input class="form-control form-control-sm rounded techx-nav-input" type="text" placeholder="username" name="username" required>
+            <input class="form-control form-control-sm rounded techx-nav-input" type="password" placeholder="password" name="password" required>
+            <input class="btn btn-sm rounded-3 techx-gradient-btn" type="submit" value="Login">
+            <a class="btn btn-sm px-3 py-1 rounded-pill techx-gradient-btn" href="/signup.html">Sign Up</a>
+          </form>
+        </div>
+        <div id="loginError"
+              class="text-danger position-absolute end-0 pe-3 text-nowrap"
+              style="bottom: 0rem;">
+        </div>
+      </div>
     </div>
   </div>
 
@@ -116,6 +146,12 @@
       <label>
         Review text:
         <textarea id="edit-text" rows="4" required></textarea>
+      </label>
+
+      <label>
+        Review image (optional):
+        <input id="edit-image" type="file" accept="image/*">
+        <div id="current-image-container" style="margin-top: 10px;"></div>
       </label>
 
       <button id="save-edit">Save changes</button>
@@ -184,6 +220,7 @@
           <h3>${review.ProductName || 'Unknown product'}</h3>
           <p><strong>Rating:</strong> ${review.Rating}</p>
           <p>${review.ProductReview || ''}</p>
+          ${review.Image ? `<img src="/review-images/${review.Image}" alt="Review image" style="max-width: 200px; max-height: 200px;">` : ''}
           <div class="actions">
             <button type="button" data-id="${review.ReviewID}" class="edit-btn">Edit</button>
             <button type="button" data-id="${review.ReviewID}" class="delete-btn">Delete</button>
@@ -193,7 +230,7 @@
         list.appendChild(card);
       });
 
-      document.querySelectorAll('.edit-btn').forEach(btn => {
+      list.querySelectorAll('.edit-btn').forEach(btn => {
         btn.addEventListener('click', () => {
           const reviewId = btn.dataset.id;
           const reviewData = reviews.find(r => r.ReviewID === reviewId);
@@ -204,37 +241,43 @@
           openEditPanel(reviewData);
         });
       });
-    
 
-    document.querySelectorAll('.delete-btn').forEach(btn => {
-  btn.addEventListener('click', async () => {
-    const reviewId = btn.dataset.id;   // <-- correct variable
+      list.querySelectorAll('.delete-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const reviewId = btn.dataset.id;
 
-    if (!confirm('Are you sure you want to delete this review?')) return;
+          if (!confirm('Are you sure you want to delete this review?')) return;
 
-    try {
-      const res = await fetch(`/api/delete_review/${reviewId}`, { method: 'DELETE' });
-      const data = await res.json();
+          try {
+            const res = await fetch(`/api/delete_review/${reviewId}`, { method: 'DELETE' });
+            const data = await res.json();
 
-      if (!data.success) {
-        showStatus(data.message || 'Failed to delete review.', 'error');
-        return;
-      }
+            if (!data.success) {
+              showStatus(data.message || 'Failed to delete review.', 'error');
+              return;
+            }
 
-      showStatus('Review deleted successfully.', 'success');
-      await loadMyReviews();
-    } catch (err) {
-      showStatus('Delete failed: ' + err.message, 'error');
+            showStatus('Review deleted successfully.', 'success');
+            await loadMyReviews();
+          } catch (err) {
+            showStatus('Delete failed: ' + err.message, 'error');
+          }
+        });
+      });
     }
-  });
-});
-  }
 
     function openEditPanel(review) {
       editingReviewId = review.ReviewID;
       document.getElementById('edit-product').value = review.ProductName || '';
       document.getElementById('edit-rating').value = review.Rating;
       document.getElementById('edit-text').value = review.ProductReview;
+      document.getElementById('edit-image').value = ''; // Clear file input
+      const currentImageContainer = document.getElementById('current-image-container');
+      if (review.Image) {
+        currentImageContainer.innerHTML = `<p>Current image:</p><img src="/review-images/${review.Image}" alt="Current review image" style="max-width: 200px; max-height: 200px;">`;
+      } else {
+        currentImageContainer.innerHTML = '<p>No image uploaded</p>';
+      }
       document.getElementById('edit-error').style.display = 'none';
       document.getElementById('edit-success').style.display = 'none';
       document.getElementById('edit-panel').style.display = 'block';
@@ -279,7 +322,28 @@
       }
 
       try {
-        const result = await apiPut(`/api/update_review/${editingReviewId}`, { review_text, rating });
+        const formData = new FormData();
+        formData.append('review_text', review_text);
+        formData.append('rating', rating);
+        const imageFile = document.getElementById('edit-image').files[0];
+        if (imageFile) {
+          formData.append('review_image', imageFile);
+        } else {
+          // If no new image, keep existing
+          const currentImage = document.querySelector('#current-image-container img');
+          if (currentImage) {
+            const imageSrc = currentImage.src;
+            const imageName = imageSrc.split('/').pop();
+            formData.append('existing_image', imageName);
+          }
+        }
+
+        const res = await fetch(`/api/update_review/${editingReviewId}`, {
+          method: 'PUT',
+          body: formData
+        });
+        const result = await res.json();
+
         if (result.success) {
           document.getElementById('edit-success').textContent = 'Review updated successfully.';
           document.getElementById('edit-success').style.display = 'block';
@@ -303,5 +367,7 @@
       loadMyReviews();
     });
   </script>
+  <script src="/js/login-form.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
 </body>
 </html>

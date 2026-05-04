@@ -3,3 +3,6 @@ FROM PollVotes
 JOIN polloptions ON PollVotes.OptionID = polloptions.OptionID
 WHERE PollVotes.PollID = ?
 GROUP BY PollVotes.OptionID, polloptions.OptionName;
+
+
+

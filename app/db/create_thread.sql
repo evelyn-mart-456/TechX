@@ -1,0 +1,1 @@
+INSERT INTO Thread (UserID, ProductID, Title) VALUES (?, ?, ?);
