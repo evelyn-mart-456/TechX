@@ -26,7 +26,7 @@ function buildPostEditor() {
     `;
 
     root.innerHTML = `
-        <textarea class="form-control mb-2" name="message" style="min-height:120px;"></textarea>
+        <textarea required class="form-control mb-2" name="message" style="min-height:120px;"></textarea>
     `;
 
     const textarea = root.querySelector("textarea");

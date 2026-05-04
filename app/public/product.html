@@ -141,7 +141,7 @@
                     <div class="card-body">
                         <div id="createThreadLabel" class="small fw-semibold mb-2" hidden>Start a new topic:</div>
                         <form id="createThreadForm" method="POST" class="border rounded-3 p-3 bg-body-tertiary" hidden>
-                            <input type="text" name="title" class="form-control mb-2" /><input type="submit" value="Submit" class="btn btn-primary" />
+                            <input type="text" name="title" class="form-control mb-2" required /><input type="submit" value="Submit" class="btn btn-primary" />
                         </form>
                     </div>
                     <div class="px-3 pb-3">
@@ -490,6 +490,8 @@
 
         document.getElementById('confirmEditBtn').addEventListener('click', () => {
             if(!selectedThread) return;
+
+            if(!editTitleText.value) return;
 
             const formData = new FormData();
 

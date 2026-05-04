@@ -205,6 +205,12 @@ app.get('/api/session', (req, res) => {
                 return res.status(500).send('Server error');
             }
 
+            req.session.moderatedBoards = [];
+
+            results.forEach( result => {
+                req.session.moderatedBoards.push(result.ProductID);
+            });
+
             return res.json({
                 loggedIn: true,
                 username: req.session.username,
