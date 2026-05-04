@@ -53,6 +53,7 @@ const update_thread_sql = fs.readFileSync('./db/update_thread.sql', 'utf8');
 const delete_thread_sql = fs.readFileSync('./db/delete_thread.sql', 'utf8');
 const create_post_sql = fs.readFileSync('./db/create_post.sql', 'utf8');
 const get_post_sql = fs.readFileSync('./db/get_post.sql', 'utf8');
+const update_post_sql = fs.readFileSync('./db/update_post.sql', 'utf8');
 const delete_post_sql = fs.readFileSync('./db/delete_post.sql', 'utf8');
 
 const create_cart_sql = fs.readFileSync('./db/create_cart.sql', 'utf8');
@@ -197,9 +198,25 @@ app.get('/purchase-history', (req, res) => {
 
 app.get('/api/session', (req, res) => {
     if(req.session.userId && req.session.username) {
-        return res.json({
-            loggedIn: true,
-            username: req.session.username
+
+        db.query(get_moderated_boards_sql, [req.session.userId], (err, results) => {
+            if(err) {
+                console.error(err);
+                return res.status(500).send('Server error');
+            }
+
+            req.session.moderatedBoards = [];
+
+            results.forEach( result => {
+                req.session.moderatedBoards.push(result.ProductID);
+            });
+
+            return res.json({
+                loggedIn: true,
+                username: req.session.username,
+                userID: req.session.userId,
+                moderatedBoards: req.session.moderatedBoards
+            });
         });
     } else {
         return res.json({loggedIn: false});
@@ -1225,11 +1242,6 @@ app.post("/votepoll", (req, res) => {
     res.json({ results: poll.options });
 });
 
-const PORT = 3000;
-app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
-
-
-
 let articles = [];
 
 // Load existing articles
@@ -1348,6 +1360,207 @@ app.get('/product/:pid/posts/:tid', (req, res) => {
 
         return res.json({posts: results});
     });
+});
+
+app.patch('/product/:id/post/:pid', (req, res) => {
+    if(req.session.userId) {
+        if(req.session.moderatedBoards && req.session.moderatedBoards.includes(Number(req.params.id))) {
+            db.query(update_post_sql, [req.body.message, req.params.pid], (err, result) => {
+                if(err) {
+                    console.error(err);
+                    return res.status(500).send('Server error');
+                }
+
+                return res.json({success: true});
+            });
+        } else {
+            db.query(get_post_sql, [req.params.pid], (err, results) => {
+                if(results[0].UserID === req.session.userId) {
+                    db.query(update_post_sql, [req.body.message, req.params.pid], (err, result) => {
+                        if(err) {
+                            console.error(err);
+                            return res.status(500).send('Server error');
+                        }
+
+                        return res.json({success: true});
+                    });
+                } else
+                    return res.status(403).send('Forbidden');
+            });
+        }
+    } else {
+        return res.status(403).send('Forbidden');
+    }
+});
+
+app.delete('/product/:id/post/:pid', (req, res) => {
+    if(req.session.userId) {
+        if(req.session.moderatedBoards && req.session.moderatedBoards.includes(Number(req.params.id))) {
+            db.query(delete_post_sql, [req.params.pid], (err, result) => {
+                if(err) {
+                    console.error(err);
+                    return res.status(500).send('Server error');
+                }
+
+                return res.json({success: true});
+            });
+        } else {
+            db.query(get_post_sql, [req.params.pid], (err, results) => {
+                if(results[0].UserID === req.session.userId) {
+                    db.query(delete_post_sql, [req.params.pid], (err, result) => {
+                        if(err) {
+                            console.error(err);
+                            return res.status(500).send('Server error');
+                        }
+
+                        return res.json({success: true});
+                    });
+                } else
+                    return res.status(403).send('Forbidden');
+            });
+        }
+    } else {
+        console.log("Forbidden - not logged in");
+        return res.status(403).send('Forbidden');
+    }
+});
+
+app.post('/product/:pid/thread/:tid', (req, res) => {
+    if(req.session.userId) {
+        db.query(create_post_sql, [req.session.userId, req.params.tid, req.body.message], (err, result) => {
+            if(err) {
+                console.error(err);
+                return res.status(500).send('Server error');
+            }
+
+            return res.redirect(`/product/${req.params.pid}/thread/${req.params.tid}/#${result.insertId}`);
+        });
+    } else
+        return res.status(403).send('Forbidden');
+})
+
+app.patch('/product/:pid/thread/:tid', (req, res) => {
+    if(req.session.userId) {
+        if(req.session.moderatedBoards && req.session.moderatedBoards.includes(Number(req.params.pid))) {
+            db.query(update_thread_sql, [req.body.title, req.params.tid], (err, results) => {
+                if(err) {
+                    console.error(err);
+                    return res.status(500).send('Server error');
+                }
+
+                return res.json({success: true});
+            });
+        } else {
+            db.query(get_thread_sql, [req.params.tid], (err, result) => {
+                if(err) {
+                    console.error(err);
+                    return res.status(500).send('Server error');
+                }
+
+                if(result.length > 0 && result[0].UserID === req.session.userId) {
+                    db.query(update_thread_sql, [req.body.title, req.params.tid], (err, results) => {
+                        if(err) {
+                            console.error(err);
+                            return res.status(500).send('Server error');
+                        }
+
+                        return res.json({success: true});
+                    });
+                } else {
+                    return res.status(403).send('Forbidden');
+                }
+            });
+        }
+    }
+});
+
+app.delete('/product/:pid/thread/:tid', (req, res) => {
+    if(req.session.userId) {
+        if(req.session.moderatedBoards && req.session.moderatedBoards.includes(Number(req.params.pid))) {
+            db.query(delete_thread_sql, [req.params.tid], (err, results) => {
+                if(err) {
+                    console.error(err);
+                    return res.status(500).send('Server error');
+                }
+
+                return res.json({success: true});
+            });
+        } else {
+            db.query(get_thread_sql, [req.params.tid], (err, result) => {
+                if(err) {
+                    console.error(err);
+                    return res.status(500).send('Server error');
+                }
+
+                if(result.length > 0 && result[0].UserID === req.session.userId) {
+                    db.query(delete_thread_sql, [req.params.tid], (err, results) => {
+                        if(err) {
+                            console.error(err);
+                            return res.status(500).send('Server error');
+                        }
+
+                        return res.json({success: true});
+                    });
+                } else {
+                    return res.status(403).send('Forbidden');
+                }
+            });
+        }
+    }
+});
+
+app.post('/product/:id/thread', (req, res) => {
+    if(req.session.userId) {
+        db.getConnection((err, connection) => {
+            if (err) {
+                console.error(err);
+                return res.status(500).send('Server error');
+            }
+
+            connection.beginTransaction(err => {
+                if(err) {
+                    console.error(err);
+                    return res.status(500).send('Server error');
+                }
+
+                connection.query(create_thread_sql, [req.session.userId, req.params.id, req.body.title], (err, threadResult) => {
+                    if(err) {
+                        return connection.rollback(() => {
+                            console.error(err);
+                            return res.status(500).send('Server error');
+                        });
+                    }
+
+                    const threadId = threadResult.insertId;
+
+                    connection.query(create_post_sql, [req.session.userId, threadId, req.body.message], (err) => {
+                        if(err) {
+                            return connection.rollback(() => {
+                                console.error(err);
+                                return res.status(500).send('Server error');
+                            });
+                        }
+                        
+                        connection.commit(err => {
+                            if (err) {
+                                return connection.rollback(() => {
+                                    connection.release();
+                                    console.error(err);
+                                    return res.status(500).send('Server error');
+                                });
+                            }
+
+                            connection.release();
+                            return res.redirect(`/product/${req.params.id}/thread/${threadId}`);
+                        });
+                    });
+                });
+
+            })
+        });
+    }
+    else
+        return res.redirect("/login");
 });
 
 app.get("/getarticles", (req, res) => {
