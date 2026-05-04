@@ -8,7 +8,16 @@ function loadCarouselItem(product, active) {
                 <div class="card-body">
                     <a class="link-underline-light" href="/product/${product.ProductID}"><h5 class="card-title">${product.ProductName}</h5></a>
                     <p class="card-text">${product.ProductDesc.slice(0, 60)}</p>
-                    <a href="${product.ProductLink}" class="btn btn-primary me-1">Source</a><span>$${product.RetailPrice}</span>
+                    <div class="d-flex flex-wrap align-items-center gap-2">
+    <a href="${product.ProductLink}" class="btn btn-primary">Source</a>
+    <button 
+        type="button" 
+        class="btn btn-success add-to-cart-btn" 
+        data-productid="${product.ProductID}">
+        Add to Cart
+    </button>
+    <span class="ms-auto fw-bold">$${product.RetailPrice}</span>
+</div>
                 </div>
             </div>
         </div>
@@ -30,8 +39,40 @@ async function loadFeaturedProducts(carousel) {
     });
 }
 
+function registerCarouselCartHandler(container) {
+    container.addEventListener('click', async (event) => {
+        const button = event.target.closest('.add-to-cart-btn');
+        if (!button) return;
+
+        const productId = button.dataset.productid;
+        const sessionRes = await fetch('/api/session');
+        const session = await sessionRes.json();
+        if (!session.loggedIn) {
+            alert('Please log in to add items to cart.');
+            return;
+        }
+
+        try {
+            const addRes = await fetch('/api/cart', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ productId, quantity: 1 })
+            });
+            const addData = await addRes.json();
+            if (addData.success) {
+                alert('Item added to cart!');
+            } else {
+                alert('Failed to add item to cart: ' + (addData.error || 'Unknown error'));
+            }
+        } catch (error) {
+            console.error('Failed to add item to cart:', error);
+            alert('Failed to add item to cart. Please try again.');
+        }
+    });
+}
+
 async function buildCarousel() {
-    const container = document.getElementById("featured-tech");
+    const container = document.getElementById('featured-tech');
 
     container.innerHTML = `
         <h2 class="mb-4 border-bottom">Featured Tech</h2>
@@ -46,12 +87,12 @@ async function buildCarousel() {
                 <span class="carousel-control-next-icon" aria-hidden="true"></span>
                 <span class="visually-hidden">Next</span>
             </button>
-            </div>
         </div>`;
     
     const carousel = document.getElementById("carousel-inner");
 
-    loadFeaturedProducts(carousel);
+    await loadFeaturedProducts(carousel);
+    registerCarouselCartHandler(carousel);
 }
 
 buildCarousel();
