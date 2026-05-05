@@ -12,11 +12,14 @@
   border-radius: 15px;
   box-shadow: 0 8px 20px rgba(0,0,0,0.1);
   color: black;
-   
-  display: flex ;
+
+  display: flex;
   flex-direction: column;
   align-items: center;
+
+  margin: 20px auto;
 }
+
 body {
   margin: 0;
   font-family: Arial, sans-serif;
@@ -44,7 +47,12 @@ body {
   background-origin: border-box;
   background-clip: content-box, border-box;
 }
-
+#articles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 20px;
+  padding: 20px;
+}
 .techx-nav-link {
   display: inline-block;
   padding: 10px 25px;
