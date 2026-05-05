@@ -1,6 +1,2 @@
-CREATE TABLE IF NOT EXISTS cart (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT NOT NULL,
-    product_id INT NOT NULL,
-    quantity INT DEFAULT 1
-);
+INSERT INTO shoppingcart (UserID, CreatedAt, UpdatedAt)
+VALUES (?, NOW(), NOW())

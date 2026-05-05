@@ -1,3 +1,1 @@
-DELETE FROM cart
-WHERE user_id = ?
-AND product_id = ?;
+DELETE FROM cartitem WHERE CartID = ? AND ProductID = ?

@@ -1,2 +1,2 @@
-INSERT INTO order_items (order_id, product_id, quantity, price)
-VALUES (?, ?, ?, ?);
+INSERT INTO orderitem (OrderID, ProductID, Quantity, Price)
+VALUES (?, ?, ?, ?)

@@ -1,9 +1,4 @@
-SELECT 
-    id,
-    user_id,
-    total_amount,
-    order_date,
-    status
+SELECT OrderID, OrderNumber, Total, ShippingID, CreatedAt
 FROM orders
-WHERE user_id = ?
-ORDER BY order_date DESC;
+WHERE UserID = ?
+ORDER BY CreatedAt DESC;

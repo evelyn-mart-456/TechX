@@ -1,4 +1,3 @@
-UPDATE cart
-SET quantity = ?
-WHERE user_id = ?
-AND product_id = ?;
+UPDATE cartitem
+SET Quantity = ?
+WHERE CartID = ? AND ProductID = ?

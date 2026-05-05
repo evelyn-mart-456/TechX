@@ -59,7 +59,7 @@ const delete_post_sql = fs.readFileSync('./db/delete_post.sql', 'utf8');
 const create_cart_sql = fs.readFileSync('./db/create_cart.sql', 'utf8');
 const get_cart_sql = fs.readFileSync('./db/get_cart.sql', 'utf8');
 const add_item_to_cart_sql = fs.readFileSync('./db/add_item_to_cart.sql', 'utf8');
-const get_cart_items_sql = fs.readFileSync('./db/get_cart_items.sql', 'utf8');
+const get_cart_items_sql = fs.readFileSync('./db/get_cart_items', 'utf8');
 const update_cart_item_quantity_sql = fs.readFileSync('./db/update_cart_item_quantity.sql', 'utf8');
 const remove_item_from_cart_sql = fs.readFileSync('./db/remove_item_from_cart.sql', 'utf8');
 const clear_cart_sql = fs.readFileSync('./db/clear_cart.sql', 'utf8');
@@ -579,39 +579,48 @@ app.post('/api/checkout', (req, res) => {
                 // Calculate total
                 const total = cartItems.reduce((sum, item) => sum + (item.Price * item.Quantity), 0);
 
-                // Create order
-                db.query(create_order_sql, [req.session.userId, total, shippingId], (err, orderResult) => {
+                // Get next order number for user
+                db.query('SELECT COALESCE(MAX(OrderNumber), 0) + 1 AS nextNum FROM orders WHERE UserID = ?', [req.session.userId], (err, numResult) => {
                     if (err) {
                         console.error('Database error:', err);
                         return res.status(500).json({ error: 'Server error' });
                     }
-                    const orderId = orderResult.insertId;
+                    const nextOrderNumber = numResult[0].nextNum;
 
-                    // Insert order items
-                    const orderItemPromises = cartItems.map(item =>
-                        new Promise((resolve, reject) => {
-                            db.query(add_order_item_sql, [orderId, item.ProductID, item.Quantity, item.Price], (err) => {
-                                if (err) reject(err);
-                                else resolve();
-                            });
-                        })
-                    );
-
-                    Promise.all(orderItemPromises)
-                        .then(() => {
-                            // Clear cart
-                            db.query(clear_cart_sql, [cartId], (err) => {
-                                if (err) {
-                                    console.error('Database error:', err);
-                                    return res.status(500).json({ error: 'Server error' });
-                                }
-                                res.json({ success: true, orderId });
-                            });
-                        })
-                        .catch(err => {
+                    // Create order
+                    db.query('INSERT INTO orders (UserID, OrderNumber, Total, ShippingID, CreatedAt) VALUES (?, ?, ?, ?, NOW())', [req.session.userId, nextOrderNumber, total, shippingId], (err, orderResult) => {
+                        if (err) {
                             console.error('Database error:', err);
-                            res.status(500).json({ error: 'Server error' });
-                        });
+                            return res.status(500).json({ error: 'Server error' });
+                        }
+                        const orderId = orderResult.insertId;
+
+                        // Insert order items
+                        const orderItemPromises = cartItems.map(item =>
+                            new Promise((resolve, reject) => {
+                                db.query(add_order_item_sql, [orderId, item.ProductID, item.Quantity, item.Price], (err) => {
+                                    if (err) reject(err);
+                                    else resolve();
+                                });
+                            })
+                        );
+
+                        Promise.all(orderItemPromises)
+                            .then(() => {
+                                // Clear cart
+                                db.query(clear_cart_sql, [cartId], (err) => {
+                                    if (err) {
+                                        console.error('Database error:', err);
+                                        return res.status(500).json({ error: 'Server error' });
+                                    }
+                                    res.json({ success: true, orderId });
+                                });
+                            })
+                            .catch(err => {
+                                console.error('Database error:', err);
+                                res.status(500).json({ error: 'Server error' });
+                            });
+                    });
                 });
             });
         });
@@ -634,7 +643,7 @@ app.get('/api/orders', (req, res) => {
             new Promise((resolve, reject) => {
                 db.query(get_order_items_sql, [order.OrderID], (err, items) => {
                     if (err) reject(err);
-                    else resolve({ ...order, items });
+                    else resolve({ ...order, orderNumber: order.OrderNumber, items });
                 });
             })
         );
@@ -892,6 +901,16 @@ app.get('/get-products', (req, res) => {
 
             res.json({products: products, categories: categories});
         })
+    });
+});
+
+app.get('/api/products', (req, res) => {
+    db.query(get_products_sql, [], (err, products) => {
+        if(err) {
+            console.error(err);
+            return res.status(500).send('Server error');
+        }
+        res.json({success: true, products: products});
     });
 });
 
