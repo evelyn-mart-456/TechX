@@ -14,10 +14,12 @@
   border-radius: 15px;
   box-shadow: 0 8px 20px rgba(0,0,0,0.1);
   color: black;
-   
-  display: flex ;
+
+  display: flex;
   flex-direction: column;
   align-items: center;
+
+  margin: 20px auto;
 }
 
 </style>
@@ -69,7 +71,6 @@
 <input type="text" id="articleTitle" placeholder="Title"><br>
 <input type="text" id="articleAuthor" placeholder="Author"><br>
 <textarea id="articleContent" placeholder="Write your article..." rows="5"></textarea>
-<input type="file" id="articleImage" accept="image/*"><br>
 <button onclick="createArticle()">Post Article</button>
 </div>
 <script>

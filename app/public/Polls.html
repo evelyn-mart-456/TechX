@@ -129,7 +129,7 @@
   <input type="text" class="newOption" placeholder="Option 2"><br>
   <input type="text" class="newOption" placeholder="Option 3"><br><br>
 
-  <button onclick="createPoll()">Create Poll</button>
+  <button id="createBtn">Create Poll</button>
 </div>
 </div>
 <hr>
@@ -165,6 +165,27 @@ async function voteFather(event){
     const data = await response.json();
     showFatherResults(data.results);
 }
+async function voteUserPoll(pollId, optionId) {
+    const response = await fetch("/votepoll", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            PollID: pollId,
+            OptionID: optionId
+        })
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+        console.log("VOTE FAILED:", data);
+        alert(data.error);
+        return;
+    }
+
+    console.log("VOTE SUCCESS:", data);
+    loadUserPolls(); // optional refresh
+}
 
 function showBrandResults(results){
     if(!results) return;
@@ -190,6 +211,42 @@ function showFatherResults(results){
     document.getElementById("fatherResults").innerHTML = html;
 }
 
+// Create poll function with correct try/catch
+
+//async function createPoll(event) {
+//  event?.preventDefault();
+
+async function createPoll() {
+  const question = document.getElementById("newQuestion").value;
+
+  const optionInputs = document.querySelectorAll(".newOption");
+
+  const options = [];
+
+  optionInputs.forEach(input => {
+    if (input.value.trim() !== "") {
+      options.push(input.value.trim());
+    }
+  });
+
+  const res = await fetch("/createPoll", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ question, options })
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    alert(data.error);
+    return;
+  }
+
+  alert("Poll created!");
+  loadUserPolls();
+}
+
+document.getElementById("createBtn").addEventListener("click", createPoll);
 // Optional: Load results on page load
 async function loadResults(){
     let res = await fetch("/voted?PollID=techBrand");
@@ -204,11 +261,18 @@ loadResults();
 
 async function loadUserPolls() {
     const response = await fetch("/getpolls");
+
+    if (!response.ok) {
+        console.error("Failed to load polls");
+        return;
+    }
+
     const data = await response.json();
 
     let container = document.getElementById("userPolls");
     container.innerHTML = "";
 
+    // ✅ FIX HERE: data is already the array
     data.polls.forEach(poll => {
         let html = `<div class="poll"><h3>${poll.question}</h3>`;
 
@@ -225,60 +289,11 @@ async function loadUserPolls() {
     });
 }
 
-async function voteUserPoll(pollId, optionId) {
-    const response = await fetch("/votepoll", {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({
-            PollID: pollId,
-            OptionID: optionId
-        })
-    });
-
-    await response.json();
-    loadUserPolls(); // refresh after voting
-}
 
 loadUserPolls();
 
-// Create poll function with correct try/catch
-    async function createPoll() {
-      const question = document.getElementById("newQuestion").value.trim();
-      const optionInputs = document.querySelectorAll(".newOption");
-      const options = [];
 
-      optionInputs.forEach(input => {
-        if (input.value.trim() !== "") options.push(input.value.trim());
-      });
 
-      if (!question || options.length < 2) {
-        alert("Enter a question and at least 2 options");
-        return;
-      }
-
-      try {
-       const response = await fetch("/createpoll", {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({ question, options })
-});
-
-        if (!response.ok) {
-          const errData = await response.json();
-          alert("Failed to create poll: " + (errData.error || "Unknown error"));
-          return;
-        }
-
-        const data = await response.json();
-        console.log("Poll created:", data);
-        alert("Poll created successfully!");
-        loadUserPolls();
-
-      } catch (err) {
-        console.error("Fetch error:", err);
-        alert("Failed to create poll: Network or server error");
-      }
-    }
 
   
 
