@@ -765,17 +765,45 @@ app.get('/voted', (req, res) => {
     });
 });
 
-// POST vote for a poll option
-app.post("/votepoll", (req, res) => {
-    const { PollID, OptionID } = req.body;
-    const poll = polls.find(p => p.id === PollID);
-    if (!poll) return res.status(404).json({ error: "Poll not found" });
+app.post('/votepoll', (req, res) => {
+    const poll = req.body.PollID;
+    const option = req.body.OptionID;
 
-    const option = poll.options.find(o => o.OptionID === OptionID);
-    if (!option) return res.status(404).json({ error: "Option not found" });
+    if(req.session.userId) {
+        db.query(create_vote_sql, [poll, option, req.session.userId], (err, results) => {
+            if(err) {
+                if(err.code === 'ER_DUP_ENTRY') {
+                    return db.query(get_votes_sql, [poll], (err, results) => {
+                        if(err) {
+                            console.error(err);
+                            return res.status(500).send('Server error');
+                        }
 
-    option.Votes += 1;
-    res.json({ results: poll.options });
+                        return res.json({
+                            results: results,
+                            message: "You already voted."
+                        });
+                    });
+                } else {
+                    console.error(err);
+                    return res.status(500).send('Server error');
+                }
+            }
+
+            return db.query(get_votes_sql, [poll], (err, results) => {
+                if(err) {
+                    console.error(err);
+                    return res.status(500).send('Server error');
+                }
+
+                res.json({
+                    results: results
+                });
+            });
+        });
+    } else {
+        res.json( {error: "You must be logged in to vote."} );
+    }
 });
 
 app.get('/polls', (req, res) => {
@@ -1199,6 +1227,19 @@ app.post("/createpoll", (req, res) => {
 
     polls.push(newPoll);
     res.json({ success: true, poll: newPoll });
+});
+
+// POST vote for a poll option
+app.post("/votepoll", (req, res) => {
+    const { PollID, OptionID } = req.body;
+    const poll = polls.find(p => p.id === PollID);
+    if (!poll) return res.status(404).json({ error: "Poll not found" });
+
+    const option = poll.options.find(o => o.OptionID === OptionID);
+    if (!option) return res.status(404).json({ error: "Option not found" });
+
+    option.Votes += 1;
+    res.json({ results: poll.options });
 });
 
 let articles = [];
