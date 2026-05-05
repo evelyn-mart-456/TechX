@@ -1,24 +1,10 @@
 body {
-  margin: 0;
   font-family: Arial, sans-serif;
   background: linear-gradient(to right, #19d7f8, #fd00da);
 }
 
-.techx-navbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 20px 40px;
-}
-
 .techx-nav-right {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-  margin-left: auto;
-  padding: 4px;
   border: 2px solid transparent;
-  border-radius: 20px;
   background-image:
     linear-gradient(#AFDBF5, #AFDBF5),
     radial-gradient(circle at top left, #fd00da, #19d7f8);
@@ -26,52 +12,21 @@ body {
   background-clip: content-box, border-box;
 }
 
-.techx-nav-link {
-  display: inline-block;
-  padding: 10px 25px;
+.techx-gradient-btn {
   color: black;
-  text-decoration: none;
-}
-
-.techx-signup-btn {
-  display: inline-block;
-  padding: 10px 25px;
-  color: black;
-  text-decoration: none;
-  border-radius: 20px;
+  border: none;
   background: linear-gradient(to right, #fd00da, #19d7f8);
 }
 
-.techx-nav-form {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin: 0;
-}
-
-.techx-nav-form input,
-.logout-button {
-  padding: 6px 10px;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-}
-
-.techx-nav-form input[type="text"],
-.techx-nav-form input[type="password"] {
+.techx-nav-input {
   width: 120px;
 }
 
-.techx-nav-form input[type="submit"],
-.logout-button {
-  cursor: pointer;
-  border: none;
-  color: black;
-  background: linear-gradient(to right, #fd00da, #19d7f8);
-  gap:4px;
-}
-
-.auth {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+.techx-toggler {
+  border: 2px solid transparent;
+  background-image:
+    linear-gradient(#AFDBF5, #AFDBF5),
+    radial-gradient(circle at top left, #fd00da, #19d7f8);
+  background-origin: border-box;
+  background-clip: content-box, border-box;
 }

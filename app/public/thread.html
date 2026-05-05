@@ -8,24 +8,41 @@
     
 </head>
 <body class="d-flex flex-column min-vh-100">
-    <div class="techx-navbar">
+    <div class="navbar navbar-expand-lg d-flex align-items-center justify-content-between px-4 py-3">
       <img src="/Techx.png" width="150" height="100" alt="TechX logo">
-
-      <div class="techx-nav-right">
-        <a class="techx-nav-link" href="/home">Home</a>
-        <a class="techx-nav-link" href="/Polls.html">Polls</a>
-        <a class="techx-nav-link" href="/tech">Tech</a>
-        <a class="techx-nav-link" href="/Review">Leave a review</a>
-        <a class="techx-nav-link" href="/purchase-history">Purchase History</a>
-        <span></span>
-        <div id="loginFormContainer" class="auth">
-          <form id="loginForm" class="techx-nav-form">
-            <input type="text" placeholder="username" name="username" required>
-            <input type="password" placeholder="password" name="password" required>
-            <input type="submit" value="Login">
-          </form>
-
-          <a class="techx-signup-btn" href="/signup.html">Sign Up</a>
+      <button class="navbar-toggler ms-auto techx-toggler" 
+              type="button" 
+              data-bs-toggle="collapse" 
+              data-bs-target="#techxNav" 
+              aria-controls="techxNav" 
+              aria-expanded="false" 
+              aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div id="techxNav" class="collapse navbar-collapse">
+        <div class="techx-nav-right position-relative d-flex flex-column flex-lg-row align-items-center gap-1 gap-xl-3 ms-auto py-4 px-1 rounded-4">
+          <div class="d-flex flex-column flex-lg-row align-items-center gap-1 gap-xl-3">
+            <a class="nav-link px-2 py-2 text-dark" href="/home">Home</a>
+            <a class="nav-link px-2 py-2 text-dark" href="/Polls.html">Polls</a>
+            <a class="nav-link px-2 py-2 text-dark" href="/tech">Tech</a>
+            <a class="nav-link px-2 py-2 text-dark" href="/Review">Leave a review</a>
+            <a class="nav-link px-2 py-2 text-dark" href="/my-reviews">My reviews</a>
+            <a class="nav-link px-2 py-2 text-dark" href="/News-Article.html">News Article</a>
+            <a class="nav-link px-2 py-2 text-dark" href="/purchase-history">Purchase History</a>
+            <a class="nav-link px-2 py-2 text-dark" href="/shopping-cart"><span class="d-flex align-items-center justify-content-center rounded-circle bg-white">🛒</span></a>
+          </div>
+          <div id="loginFormContainer" class="d-flex align-items-center">
+            <form id="loginForm" class="d-flex flex-row align-items-center gap-1 gap-xl-2 m-0">
+              <input class="form-control form-control-sm rounded techx-nav-input" type="text" placeholder="username" name="username" required>
+              <input class="form-control form-control-sm rounded techx-nav-input" type="password" placeholder="password" name="password" required>
+              <input class="btn btn-sm rounded-3 techx-gradient-btn" type="submit" value="Login">
+              <a class="btn btn-sm px-3 py-1 rounded-pill techx-gradient-btn" href="/signup.html">Sign Up</a>
+            </form>
+          </div>
+          <div id="loginError"
+               class="text-danger position-absolute end-0 pe-3 text-nowrap"
+               style="bottom: 0rem;">
+          </div>
         </div>
       </div>
     </div>
@@ -33,15 +50,12 @@
     <div class="container bg-light flex-grow-1 mb-4">
         <div class="row mt-4">
             <div class="col">
-                <div class="card">
-                <div class="card-header h5 mb-0 fw-bold text-bg-dark" id="discussionTitle"></div>
+                <div class="card shadow-sm">
+                <div class="card-header h5 mb-0 fw-bold text-white mb-3" id="discussionTitle" style="background: linear-gradient(135deg, #3b5bdb, #5f3dc4)"></div>
                 <div class="px-3 pb-3">
-                    <table class="table">
-                        <tbody id="discussionPosts">
+                    <div id="discussionPosts" class="d-flex flex-column gap-2">
 
-                        </tbody>
-                    </table>
-                </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -64,15 +78,30 @@
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="/js/login-form.js" defer></script>
     <script>
+        marked.setOptions({ breaks: true });
         const parts = window.location.pathname.split("/").filter(Boolean);
-        let productId, threadId;
+        let productId, threadId, page, postId, pageSize;
+
+        let posts = [];
+
+        pageSize = 10;
 
         if(parts.length === 4 && parts[0] === "product" && parts[2] === "thread") {
             productId = parts[1];
             threadId = parts[3];
         }
+
+        postId = Number(window.location.hash.slice(1));
+
+        const params = new URLSearchParams(window.location.search);
+
+        page = Number(params.get("page"));
+
+        if(!page)
+            page = 1;
 
         const postTable = document.getElementById("discussionPosts");
 
@@ -83,42 +112,137 @@
             return session;
         }
 
-        async function loadPosts() {
-            const session = await getSession();
+        function buildPagination(numPosts) {
+            const totalPages = Math.ceil(numPosts / pageSize);
+            const pageDiv = document.createElement('div');
 
-            const res = await fetch(`/product/${productId}/posts/${threadId}`);
-            const data = await res.json();
+            if(totalPages <= 1) return pageDiv;
 
-            document.getElementById("discussionTitle").innerText = data.posts[0].Title;
+            let html = '';
 
-            if(session.loggedIn) {
+            if(totalPages <= 5) {
+                for(let i=1; i<=totalPages; i++) {
+                    let pageNumber = ''
+                    if(i === page) {
+                        pageNumber = `<span class="fw-bold">${i}</span>`;
+                    } else {
+                        pageNumber = `<a href="/product/${productId}/thread/${threadId}?page=${i}" class="text-decoration-none fw-semibold">${i}</a>`;
+                    }
+
+                    if(i !== totalPages)
+                        html += pageNumber + ' ';
+                    else
+                        html += pageNumber;
+                }
+            } else {
+                let start = page - 2;
+                let end = page + 2;
+
+                if(page !== 1)
+                    html += `<a href="/product/${productId}/thread/${threadId}?page=1" class="text-decoration-none"><<</a> 
+                             <a href="/product/${productId}/thread/${threadId}?page=${page-1}" class="text-decoration-none"><</a> 
+                             `;
+                
+                if(start < 1) {
+                    start = 1;
+                    end = start + 4;
+                }
+
+                if(end > totalPages) {
+                    end = totalPages;
+                    start = totalPages - 4;
+                }
+
+                for(let i=start; i<=end; i++) {
+                    let pageNumber = ''
+                    if(i === page) {
+                        pageNumber = `<span class="fw-bold">${i}</span>`;
+                    } else {
+                        pageNumber = `<a href="/product/${productId}/thread/${threadId}?page=${i}" class="text-decoration-none fw-semibold">${i}</a>`;
+                    }
+
+                    if(i !== totalPages)
+                        html += pageNumber + ' ';
+                    else
+                        html += pageNumber;
+                }
+
+                if(page !== totalPages)
+                    html += ` <a href="/product/${productId}/thread/${threadId}?page=${page+1}" class="text-decoration-none">></a> 
+                              <a href="/product/${productId}/thread/${threadId}?page=${totalPages}" class="text-decoration-none">>></a> `;
             }
 
-            data.posts.forEach(post => {
-                const postRow = document.createElement("tr");
+            pageDiv.innerHTML = html;
+
+            return pageDiv;
+        }
+
+        async function loadPostPage() {
+            postTable.innerHTML = '';
+            const session = await getSession();
+            let pagePosts = [];
+            
+            if(postId) {
+                const index = posts.findIndex(post => post.PostID === postId);
+
+                if(index !== -1) {
+                    page = Math.floor( index / pageSize) + 1;
+                    const start = (page - 1) * pageSize;
+
+                    pagePosts = posts.slice(start, start + pageSize);
+                }
+            } else if(page) {
+                const start = (page - 1) * pageSize;
+                if(start < posts.length) {
+                    pagePosts = posts.slice(start, Math.min(start+pageSize, posts.length));
+                }
+            } else {
+                pagePosts = posts.slice(0, Math.min(pageSize, posts.length));
+            }
+
+            const topPageDiv = buildPagination(posts.length);
+            const bottomPageDiv = topPageDiv.cloneNode(true);
+
+            postTable.appendChild(topPageDiv);
+
+            pagePosts.forEach((post, i) => {
+                const postRow = document.createElement("div");
+
+                postRow.className = "card shadow-sm border-0 rounded-3 overflow-hidden";
                 
                 postRow.innerHTML = `
-                    <td class="text-nowrap border-right">
-                        <div><a href="/product/${post.ProductID}/thread/${post.ThreadID}">${post.Title}</a></div>
-                        <div>by ${post.Username} on ${new Date(post.CreationDate).toLocaleString()}</div>
-                    </td>
-                    <td class="w-100">
-                        <div>
-                            ${
-                            (session.moderatedBoards && session.moderatedBoards.includes(Number(productId))) || post.UserID === session.userID ?
-                            `<span style="float:right">
-                                <button class="btn btn-link p-0 ms-1 edit-post-btn" data-post-id="${post.PostID}" title="Edit">
-                                    <i class="bi bi-pencil-square"></i>
-                                </button>
-                                <button class="btn btn-link p-0 ms-1 delete-btn" data-post-id="${post.PostID}" title="Delete">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </span>
-                            ` : ''}
-                            ${post.Text}
+                    <div class="card-body p-0">
+                        <div class="row g-0 d-flex ${!(i%2) ? 'bg-secondary-subtle' : 'bg-light'}">
+                            <div class="col-4 col-sm-3 col-md-3 col-lg-2 border-end border-secondary-subtle" style="max-width:180px;">
+                                <div class="px-2 py-2">
+                                    <div><a class="small fw-semibold text-decoration-none text-body d-block mb-1" href="#${post.PostID}">${post.Title}</a></div>
+                                    <div class="small text-muted">by ${post.Username}</div>
+                                    <div class="small text-muted">${new Date(post.CreationDate).toLocaleString()}</div>
+                                </div>
+                            </div>
+                            <div class="col d-flex">
+                                <div class="flex-grow-1 d-flex flex-column px-3 py-2">
+                                    <div class="post-text fs-6 lh-base" data-post-id="${post.PostID}" style="min-width: 0;overflow-wrap: anywhere; word-break: break-word;">
+                                        ${marked.parse(post.Text)}
+                                    </div>
+                                    <div class="small text-muted fst-italic mt-auto" ${!post.ModificationDate ? "hidden" : ""}>
+                                        modified: ${new Date(post.ModificationDate).toLocaleString()}
+                                    </div>
+                                </div>
+                                ${
+                                (session.moderatedBoards && session.moderatedBoards.includes(Number(productId))) || post.UserID === session.userID ?
+                                `<div class="d-flex align-items-center pe-3">
+                                    <button class="btn btn-link p-0 text-muted ms-1 edit-post-btn" data-post-id="${post.PostID}" title="Edit">
+                                        <i class="bi bi-pencil-square"></i>
+                                    </button>
+                                    <button class="btn btn-link text-muted p-0 ms-1 delete-btn" data-post-id="${post.PostID}" title="Delete">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </span>
+                                ` : '<div class="d-flex align-items-center pe-3"></div>'}
+                            </div>
                         </div>
-                        <div ${!post.ModificationDate ? "hidden" : ""}>${new Date(post.ModificationDate).toLocaleString()}</div>
-                    </td>
+                    </div>
                 `;
 
                 postTable.appendChild(postRow);
@@ -129,6 +253,45 @@
             document.querySelectorAll('.edit-post-btn').forEach(btn => {
                 btn.addEventListener('click', event => {
                     selectedPost = btn.dataset.postId;
+
+                    const postText = document.querySelector(`div[data-post-id="${selectedPost}"]`);
+                    const postEditor = buildPostEditor();
+                    const postTextArea = postEditor.textarea;
+                    const acceptDiv = document.createElement("div");
+
+                    acceptDiv.innerHTML = `
+                        <button class="btn btn-primary me-1 accept-changes-btn" data-post-id="${selectedPost}">Accept</button>
+                        <button class="btn btn-secondary cancel-changes-btn" data-post-id="${selectedPost}">Cancel</button>
+                    `;
+
+                    const originalPost = posts.find(post => post.PostID === Number(selectedPost));
+
+                    postTextArea.value = originalPost.Text;
+
+                    postText.replaceWith(postEditor.root);
+
+                    postEditor.root.after(acceptDiv);
+
+                    const acceptBtn = acceptDiv.querySelector(`.accept-changes-btn`);
+                    acceptBtn.addEventListener('click', event => {
+                        if (!postTextArea.checkValidity()) {
+                            postTextArea.reportValidity();
+                            return;
+                        }
+
+                        const formData = new FormData();
+
+                        formData.append("message", postTextArea.value);
+
+                        fetch(`/product/${productId}/post/${selectedPost}`, {method: 'PATCH', body: new URLSearchParams(formData)})
+                            .then(() => location.reload());
+                    });
+
+                    const cancelBtn = acceptDiv.querySelector(`.cancel-changes-btn`);
+                    cancelBtn.addEventListener('click', event => {
+                        postEditor.root.replaceWith(postText);
+                        acceptDiv.remove();
+                    });
                 });
             });
 
@@ -148,21 +311,40 @@
                     .then(() => location.reload());
             });
 
+            postTable.appendChild(bottomPageDiv);
+
             if(session.loggedIn) {
-                const postFormRow = document.createElement("tr");
+                const postFormRow = document.createElement("div");
+                postFormRow.classList = "row";
 
                 postFormRow.innerHTML = `
-                    <td>
-                        <div>Reply to Post</div>
-                        <form action="/product/${productId}/thread/${threadId}" method="POST">
-                            <textarea class="form-control mb-2" name="message"></textarea>
-                            <input type="submit" value="Submit" class="btn btn-primary" />
-                        </form>
-                    </td>
+                    <form action="/product/${productId}/thread/${threadId}" method="POST">
+                        <input type="submit" value="Submit" class="btn btn-primary" />
+                    </form>
                 `;
 
-                postTable.appendChild(postFormRow);
+                const postEditor = buildPostEditor().root;
+
+                postFormRow.querySelector("form input").before(postEditor);
+                postTable.append(postFormRow);
             }
+        }
+
+        async function loadPosts() {
+            const session = await getSession();
+
+            const res = await fetch(`/product/${productId}/posts/${threadId}`);
+            const data = await res.json();
+
+            document.getElementById("discussionTitle").innerHTML = `
+                <a href="/product/${productId}" class="small fs-6 text-white text-decoration-none">← Back to Product Page</a>
+                <span class="text-muted text-white"> / </span>
+                <span class="fw-semibold text-white">${data.posts[0].Title}</span>
+            `;
+
+            posts = data.posts;
+
+            await loadPostPage();
         }
 
         if(productId && threadId)
@@ -173,6 +355,7 @@
             `;
         }
     </script>
+    <script src="/js/post-editor.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
 </body>
 </html> 
